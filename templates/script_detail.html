@@ -28,3 +28,149 @@
   <a href="{{ url_for('projects.detail', id=script.project.id) }}" class="btn btn-secondary">Back to Projects</a>
 </div>
 {% endblock %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="fas fa-file-code me-2"></i>
+                        {{ script.name }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Project: <a href="{{ url_for('projects.detail', id=project.id) }}" class="text-decoration-none">{{ project.name }}</a>
+                    </p>
+                    {% if script.description %}
+                    <p class="text-muted">{{ script.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    {% if can_edit %}
+                    <a href="{{ url_for('projects.edit_script', id=project.id, script_id=script.id) }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('execution.run_script', script_id=script.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-play me-1"></i>Run Test
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script Content -->
+    {% if robot_content %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Robot Framework Script</h5>
+                    <a href="{{ url_for('projects.download_script', id=project.id, script_id=script.id) }}" 
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-download me-1"></i>Download
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <pre class="mb-0 p-3" style="max-height: 500px; overflow-y: auto;"><code>{{ robot_content }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Execution History -->
+    {% if executions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Executions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>Started</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for execution in executions %}
+                                <tr>
+                                    <td>#{{ execution.id }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if execution.status.value == 'passed' %}success{% elif execution.status.value == 'failed' %}danger{% elif execution.status.value == 'running' %}warning{% else %}secondary{% endif %}">
+                                            {{ execution.status.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if execution.duration %}
+                                            {{ "%.1f"|format(execution.duration) }}s
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ execution.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('execution.detail', execution_id=execution.id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Script Versions -->
+    {% if versions %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Version History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Created By</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for version in versions %}
+                                <tr>
+                                    <td>v{{ version.version_number }}</td>
+                                    <td>{{ version.created_by.username }}</td>
+                                    <td>{{ version.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

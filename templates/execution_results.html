@@ -127,3 +127,171 @@ function pollExecutionStatus(executionId) {
 }
 </script>
 {% endblock %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-play me-2"></i>
+                    Execution Results
+                </h1>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="project_id" class="form-label">Project</label>
+                            <select class="form-select" id="project_id" name="project_id">
+                                <option value="">All Projects</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" 
+                                        {% if current_project_id == project.id|string %}selected{% endif %}>
+                                    {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if not current_status or current_status == 'all' %}selected{% endif %}>All Statuses</option>
+                                <option value="passed" {% if current_status == 'passed' %}selected{% endif %}>Passed</option>
+                                <option value="failed" {% if current_status == 'failed' %}selected{% endif %}>Failed</option>
+                                <option value="running" {% if current_status == 'running' %}selected{% endif %}>Running</option>
+                                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                            <a href="{{ url_for('execution.list_results') }}" class="btn btn-outline-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results -->
+    {% if executions.items %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Project</th>
+                                    <th>Script</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>Started</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for execution in executions.items %}
+                                <tr>
+                                    <td>#{{ execution.id }}</td>
+                                    <td>{{ execution.project.name }}</td>
+                                    <td>
+                                        {% if execution.script %}
+                                            {{ execution.script.name }}
+                                        {% else %}
+                                            <em>Suite Run</em>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if execution.status.value == 'passed' %}success{% elif execution.status.value == 'failed' %}danger{% elif execution.status.value == 'running' %}warning{% else %}secondary{% endif %}">
+                                            {{ execution.status.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if execution.duration %}
+                                            {{ "%.1f"|format(execution.duration) }}s
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ execution.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('execution.detail', execution_id=execution.id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if executions.pages > 1 %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if executions.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('execution.list_results', page=executions.prev_num, project_id=current_project_id, status=current_status) }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in executions.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != executions.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('execution.list_results', page=page_num, project_id=current_project_id, status=current_status) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if executions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('execution.list_results', page=executions.next_num, project_id=current_project_id, status=current_status) }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-play-circle fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No Execution Results</h3>
+                <p class="text-muted mb-4">
+                    No test executions found. Start by running some tests!
+                </p>
+                <a href="{{ url_for('projects.list_projects') }}" class="btn btn-primary">
+                    <i class="fas fa-folder me-2"></i>Go to Projects
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

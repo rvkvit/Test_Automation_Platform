@@ -14,3 +14,139 @@
   <pre>{{ report_content }}</pre>
 {% endif %}
 {% endblock %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="fas fa-play me-2"></i>
+                        Execution #{{ execution.id }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Project: {{ execution.project.name }}
+                        {% if execution.script %}
+                        | Script: {{ execution.script.name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <span class="badge bg-{% if execution.status.value == 'passed' %}success{% elif execution.status.value == 'failed' %}danger{% elif execution.status.value == 'running' %}warning{% else %}secondary{% endif %} fs-6">
+                    {{ execution.status.value.title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Execution Details -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Execution Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if execution.status.value == 'passed' %}success{% elif execution.status.value == 'failed' %}danger{% elif execution.status.value == 'running' %}warning{% else %}secondary{% endif %}">
+                                {{ execution.status.value.title() }}
+                            </span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Started:</dt>
+                        <dd class="col-sm-8">{{ execution.started_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</dd>
+                        
+                        {% if execution.ended_at %}
+                        <dt class="col-sm-4">Ended:</dt>
+                        <dd class="col-sm-8">{{ execution.ended_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</dd>
+                        {% endif %}
+                        
+                        {% if execution.duration %}
+                        <dt class="col-sm-4">Duration:</dt>
+                        <dd class="col-sm-8">{{ "%.1f"|format(execution.duration) }} seconds</dd>
+                        {% endif %}
+                        
+                        <dt class="col-sm-4">Executed by:</dt>
+                        <dd class="col-sm-8">{{ execution.executed_by.username }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Test Results</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Total Tests:</dt>
+                        <dd class="col-sm-8">{{ execution.test_count }}</dd>
+                        
+                        <dt class="col-sm-4">Passed:</dt>
+                        <dd class="col-sm-8">
+                            <span class="text-success">{{ execution.passed_count }}</span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Failed:</dt>
+                        <dd class="col-sm-8">
+                            <span class="text-danger">{{ execution.failed_count }}</span>
+                        </dd>
+                        
+                        {% if execution.test_count > 0 %}
+                        <dt class="col-sm-4">Pass Rate:</dt>
+                        <dd class="col-sm-8">
+                            {% set pass_rate = (execution.passed_count / execution.test_count * 100) %}
+                            <span class="{% if pass_rate >= 80 %}text-success{% elif pass_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ "%.1f"|format(pass_rate) }}%
+                            </span>
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Execution Log -->
+    {% if execution.execution_log %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Execution Log</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ execution.execution_log }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('execution.list_results') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Results
+                </a>
+                {% if execution.script %}
+                <a href="{{ url_for('projects.script_detail', id=execution.project_id, script_id=execution.script_id) }}" 
+                   class="btn btn-outline-primary">
+                    <i class="fas fa-file-code me-1"></i>View Script
+                </a>
+                {% endif %}
+                {% if execution.video_path %}
+                <a href="#" class="btn btn-outline-info">
+                    <i class="fas fa-video me-1"></i>Watch Recording
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

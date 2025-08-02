@@ -355,3 +355,99 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 {% endblock %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-edit me-2"></i>
+                Edit Script: {{ script.name }}
+            </h1>
+        </div>
+    </div>
+    
+    <!-- Metadata Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Script Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="update_metadata">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Script Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="{{ script.name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tags" class="form-label">Tags</label>
+                                    <input type="text" class="form-control" id="tags" name="tags" 
+                                           value="{{ script.tags or '' }}" placeholder="comma,separated,tags">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ script.description or '' }}</textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Update Metadata</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script Content Editor -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Robot Framework Script</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="update_content">
+                        
+                        <div class="mb-3">
+                            <textarea class="form-control" id="robot_content" name="robot_content" 
+                                      rows="20" style="font-family: monospace;">{{ robot_content }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Save Script</button>
+                            <a href="{{ url_for('projects.script_detail', id=project.id, script_id=script.id) }}" 
+                               class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Simple syntax highlighting for Robot Framework
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('robot_content');
+    if (textarea) {
+        // Add basic line numbers and syntax highlighting if needed
+        textarea.addEventListener('input', function() {
+            // Auto-save functionality could be added here
+        });
+    }
+});
+</script>
+{% endblock %}

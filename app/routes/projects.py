@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app import db, csrf
 from app.models import Project, TestScript, ExecutionResult, ProjectMember, User, ScriptVersion
+from app.models import ExecutionStatus
 from app.auth import project_access_required
 from app.utils.security import (
     sanitize_input,
@@ -51,7 +52,6 @@ class ProjectForm(FlaskForm):
 @bp.route('/')
 @login_required
 def list_projects():
-def list_projects():
     """List all projects accessible to the current user"""
     if current_user.has_role('Admin'):
         # Admin can see all projects
@@ -93,7 +93,7 @@ def list_projects():
         
         if last_execution:
             stats['last_execution'] = last_execution.started_at
-            stats['last_execution_status'] = last_execution.status.value
+            stats['last_execution_status'] = last_execution.status
         
         project_stats[project.id] = stats
     
@@ -186,8 +186,8 @@ def detail(id):
         
         passed_executions = ExecutionResult.query.filter_by(
             script_id=script.id,
-            status=ExecutionResult.status.PASSED
-        ).count() if hasattr(ExecutionResult.status, 'PASSED') else 0
+            status=ExecutionStatus.PASSED
+        ).count()
         
         pass_rate = (passed_executions / total_executions * 100) if total_executions > 0 else 0
         
