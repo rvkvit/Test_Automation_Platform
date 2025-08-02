@@ -1,3 +1,4 @@
+
 import smtplib
 import logging
 from email.mime.text import MIMEText
@@ -54,3 +55,14 @@ def configure_email(app):
     # Email configuration would go here
     # For now, we'll use console logging for development
     logging.basicConfig(level=logging.INFO)
+
+class EmailService:
+    """Email service class for backward compatibility"""
+    
+    @staticmethod
+    def send_invitation(email, token):
+        return send_invitation_email(email, token)
+    
+    @staticmethod
+    def send_password_reset(email, token):
+        return send_password_reset_email(email, token)

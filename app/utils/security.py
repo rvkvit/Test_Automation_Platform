@@ -40,6 +40,10 @@ def generate_invitation_token():
     """Generate a secure invitation token"""
     return secrets.token_urlsafe(32)
 
+def generate_secure_token():
+    """Generate a secure token"""
+    return secrets.token_urlsafe(32)
+
 def is_safe_url(target):
     """Check if a URL is safe for redirect"""
     ref_url = urlparse(request.host_url)

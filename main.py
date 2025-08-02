@@ -5,12 +5,16 @@ from app import create_app
 # Configure logging for better debugging
 logging.basicConfig(level=logging.DEBUG)
 
-app = create_app()
-
 if __name__ == '__main__':
-    # Get port from environment or default to 5000
-    port = int(os.environ.get('PORT', 5000))
-    # Set debug mode based on FLASK_DEBUG env var (default: False)
-    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
-    # Bind to 0.0.0.0 for external access
-    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    try:
+        app = create_app()
+
+        port = int(os.environ.get('PORT', 5000))
+        host = '0.0.0.0'
+
+        print(f"Starting TestCraft Pro on {host}:{port}")
+        app.run(host=host, port=port, debug=True)
+    except Exception as e:
+        print(f"Failed to start application: {e}")
+        import traceback
+        traceback.print_exc()

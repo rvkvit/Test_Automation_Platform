@@ -91,16 +91,34 @@ def change_user_role():
         return jsonify({'error': 'Access denied'}), 403
 
     user_id = request.form.get('user_id')
-    role_id = request.form.get('role_id')
+    new_role_id = request.form.get('role_id')
 
-    user = User.query.get_or_404(user_id)
-    role = Role.query.get_or_404(role_id)
+    if not user_id or not new_role_id:
+        return jsonify({'error': 'Missing user_id or role_id'}), 400
 
-    user.role_id = role_id
-    db.session.commit()
+    try:
+        user = User.query.get(user_id)
+        role = Role.query.get(new_role_id)
 
-    flash(f'Updated {user.username} role to {role.name}', 'success')
-    return redirect(url_for('team.index'))
+        if not user or not role:
+            return jsonify({'error': 'User or role not found'}), 404
+
+        user.role_id = role.id
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Role updated to {role.name}',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'role': role.name
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/user/<int:user_id>/toggle-status', methods=['POST'])
 @login_required

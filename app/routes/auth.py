@@ -15,7 +15,7 @@ from app.utils.security import (
     sanitize_input, generate_csrf_token, validate_csrf_token,
     generate_invitation_token
 )
-from app.emailer import EmailService
+from app.emailer import send_invitation_email
 
 bp = Blueprint('auth', __name__)
 
