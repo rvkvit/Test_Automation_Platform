@@ -37,7 +37,7 @@
         </li>
         {% if current_user.has_role('Admin') or current_user.has_role('Tester') %}
         <li>
-            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('team.') %}active{% endif %}" href="{{ url_for('team.dashboard') }}">
+            <a class="nav-link d-flex align-items-center {% if request.endpoint == 'team.index' %}active{% endif %}" href="{{ url_for('team.index') }}">
                 <i class="fas fa-users me-2"></i>Team
             </a>
         </li>
