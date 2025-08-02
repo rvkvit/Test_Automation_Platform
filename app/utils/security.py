@@ -1,11 +1,56 @@
 import secrets
 import string
+import re
+from datetime import datetime, timezone
+from urllib.parse import urlparse, urljoin
+from flask import request
+
+def sanitize_input(text):
+    """Sanitize user input to prevent basic injection attacks"""
+    if not text:
+        return ''
+    # Remove null bytes and control characters
+    text = text.replace('\x00', '').replace('\r', '').replace('\n', ' ')
+    # Strip leading/trailing whitespace
+    return text.strip()
+
+def generate_csrf_token():
+    """Generate a CSRF token"""
+    return secrets.token_urlsafe(32)
+
+def validate_csrf_token(token, session_token):
+    """Validate CSRF token"""
+    if not token or not session_token:
+        return False
+    return secrets.compare_digest(token, session_token)
+
+def validate_email(email):
+    """Validate email format"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def validate_username(username):
+    """Validate username format"""
+    if not username or len(username) < 3 or len(username) > 30:
+        return False
+    pattern = r'^[a-zA-Z0-9_-]+$'
+    return re.match(pattern, username) is not None
+
+def generate_invitation_token():
+    """Generate a secure invitation token"""
+    return secrets.token_urlsafe(32)
+
+def is_safe_url(target):
+    """Check if a URL is safe for redirect"""
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
 import hashlib
 import hmac
-import re
-from datetime import datetime, timedelta, timezone
-from urllib.parse import quote, unquote
 import logging
+from datetime import timedelta, timezone
+from urllib.parse import quote, unquote
 
 logger = logging.getLogger(__name__)
 
@@ -13,16 +58,6 @@ def generate_secure_token(length=32):
     """Generate a cryptographically secure random token"""
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
-
-def generate_csrf_token():
-    """Generate a CSRF token"""
-    return secrets.token_urlsafe(32)
-
-def validate_csrf_token(token, session_token):
-    """Validate a CSRF token against the session token"""
-    if not token or not session_token:
-        return False
-    return hmac.compare_digest(token, session_token)
 
 def hash_password_simple(password):
     """Simple password hashing for demonstration (use proper hashing in production)"""
@@ -38,27 +73,6 @@ def verify_password_simple(password, hashed):
         return hmac.compare_digest(password_hash, computed_hash.hex())
     except:
         return False
-
-def validate_email(email):
-    """Validate email address format"""
-    if not email:
-        return False
-    
-    # Basic email regex - RFC 5322 compliant would be much more complex
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
-
-def validate_username(username):
-    """Validate username format"""
-    if not username:
-        return False
-    
-    # Username should be 3-30 characters, alphanumeric plus underscore/dash
-    if len(username) < 3 or len(username) > 30:
-        return False
-    
-    pattern = r'^[a-zA-Z0-9_-]+$'
-    return re.match(pattern, username) is not None
 
 def validate_password_strength(password):
     """
@@ -110,27 +124,6 @@ def validate_password_strength(password):
     
     return {'valid': True, 'message': 'Password is strong'}
 
-def sanitize_input(value, max_length=1000, allow_html=False):
-    """
-    Sanitize user input to prevent XSS and other attacks
-    """
-    if not value:
-        return ""
-    
-    # Convert to string and limit length
-    sanitized = str(value)[:max_length]
-    
-    if not allow_html:
-        # Basic HTML entity encoding
-        sanitized = (sanitized
-                    .replace('&', '&amp;')
-                    .replace('<', '&lt;')
-                    .replace('>', '&gt;')
-                    .replace('"', '&quot;')
-                    .replace("'", '&#x27;'))
-    
-    return sanitized.strip()
-
 def validate_url(url, allowed_schemes=None):
     """
     Validate URL format and scheme
@@ -140,8 +133,6 @@ def validate_url(url, allowed_schemes=None):
     
     if allowed_schemes is None:
         allowed_schemes = ['http', 'https']
-    
-    from urllib.parse import urlparse
     
     try:
         parsed = urlparse(url)
@@ -158,10 +149,6 @@ def validate_url(url, allowed_schemes=None):
         
     except Exception:
         return False
-
-def generate_invitation_token():
-    """Generate a secure invitation token"""
-    return secrets.token_urlsafe(48)
 
 def is_token_expired(created_at, expires_in_hours=72):
     """Check if a token has expired"""
