@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from datetime import datetime
-from app.models import Project, TestScript, ExecutionResult
+from app.models import Project, TestScript, ExecutionResult, ExecutionStatus
 from app import db
 
 bp = Blueprint('main', __name__)
@@ -28,13 +28,19 @@ def dashboard():
             # User-specific data
             user_projects = Project.query.filter_by(owner_id=current_user.id).all()
             project_count = len(user_projects)
-            script_count = sum(len(p.test_scripts) for p in user_projects)
-            execution_count = ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id).count()
-            recent_executions = ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id).order_by(ExecutionResult.started_at.desc()).limit(10).all()
+            script_count = sum(len(p.scripts) for p in user_projects)
+            execution_count = ExecutionResult.query.filter(ExecutionResult.project_id.in_([p.id for p in user_projects])).count()
+            recent_executions = ExecutionResult.query.filter(ExecutionResult.project_id.in_([p.id for p in user_projects])).order_by(ExecutionResult.started_at.desc()).limit(10).all()
         
         # Calculate success rate
         if execution_count > 0:
-            passed_count = ExecutionResult.query.filter_by(status='PASSED').count() if current_user.has_role('Admin') else ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id, ExecutionResult.status == 'PASSED').count()
+            if current_user.has_role('Admin'):
+                passed_count = ExecutionResult.query.filter_by(status=ExecutionStatus.PASSED).count()
+            else:
+                passed_count = ExecutionResult.query.filter(
+                    ExecutionResult.project_id.in_([p.id for p in user_projects]),
+                    ExecutionResult.status == ExecutionStatus.PASSED
+                ).count()
             success_rate = round((passed_count / execution_count) * 100, 1)
         else:
             success_rate = 0

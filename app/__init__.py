@@ -105,21 +105,22 @@ def create_app():
         ).first()
         if not admin_exists:
             admin_role = Role.query.filter_by(name='Admin').first()
-            if not admin_role:
-                admin_role = Role(name='Admin', description='Full system access')
-                db.session.add(admin_role)
-                db.session.commit()  # Commit role if newly created
-            admin_user = User(
-                username='TestCraftAdmin',
-                email='admin@testcraft.pro',
-                password_hash=generate_password_hash('TestCraft2024!'),
-                role=admin_role,
-                is_active=True
-            )
-            db.session.add(admin_user)
-            db.session.commit()
-            print("TestCraft Pro admin user created:")
-            print("  Email: admin@testcraft.pro")
-            print("  Password: TestCraft2024!")
+            if admin_role:
+                admin_user = User(
+                    username='TestCraftAdmin',
+                    email='admin@testcraft.pro',
+                    password_hash=generate_password_hash('TestCraft2024!'),
+                    role_id=admin_role.id,
+                    is_active=True
+                )
+                db.session.add(admin_user)
+                try:
+                    db.session.commit()
+                    print("TestCraft Pro admin user created:")
+                    print("  Email: admin@testcraft.pro")
+                    print("  Password: TestCraft2024!")
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"Failed to create admin user: {e}")
     
     return app

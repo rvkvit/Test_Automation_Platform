@@ -17,51 +17,6 @@ class Role(db.Model):
     def __repr__(self):
         return f'<Role {self.name}>'
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    last_login = db.Column(db.DateTime)
-
-    # Relationships
-    owned_projects = db.relationship('Project', backref='owner', lazy=True, foreign_keys='Project.owner_id')
-    executions = db.relationship('ExecutionResult', backref='executed_by', lazy=True)
-
-    def has_role(self, role_name):
-        """Check if user has a specific role"""
-        return self.role and self.role.name == role_name
-
-    def can_access_project(self, project):
-        """Check if user can access a project"""
-        if self.has_role('Admin') or project.owner_id == self.id:
-            return True
-        
-        # Check if user is a project member
-        member = ProjectMember.query.filter_by(
-            project_id=project.id,
-            user_id=self.id
-        ).first()
-        return member is not None
-
-    def can_edit_project(self, project):
-        """Check if user can edit a project"""
-        if self.has_role('Admin') or project.owner_id == self.id:
-            return True
-        
-        # Check if user is a project member with edit permissions
-        member = ProjectMember.query.filter_by(
-            project_id=project.id,
-            user_id=self.id
-        ).first()
-        return member and member.can_edit
-
-    def __repr__(self):
-        return f'<User {self.username}>'
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -75,6 +30,9 @@ class User(UserMixin, db.Model):
     # Relationships
     projects = db.relationship('Project', backref='owner', lazy=True)
     project_members = db.relationship('ProjectMember', backref='user', lazy=True)
+    executions = db.relationship('ExecutionResult', backref='executed_by', lazy=True)
+    created_scripts = db.relationship('TestScript', backref='created_by', lazy=True)
+    sent_invitations = db.relationship('InvitationToken', backref='created_by', lazy=True)
 
     def has_role(self, role_name):
         return self.role and self.role.name == role_name
@@ -99,17 +57,18 @@ class User(UserMixin, db.Model):
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     base_url = db.Column(db.String(255))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    test_scripts = db.relationship('TestScript', backref='project', lazy=True, cascade='all, delete-orphan')
+    scripts = db.relationship('TestScript', backref='project', lazy=True, cascade='all, delete-orphan')
+    executions = db.relationship('ExecutionResult', backref='project', lazy=True, cascade='all, delete-orphan')
     members = db.relationship('ProjectMember', backref='project', lazy=True, cascade='all, delete-orphan')
-    execution_results = db.relationship('ExecutionResult', backref='project', lazy=True)
+    invitations = db.relationship('InvitationToken', backref='project', lazy=True)
 
     def __repr__(self):
         return f'<Project {self.name}>'
@@ -124,30 +83,27 @@ class ProjectMember(db.Model):
 
     __table_args__ = (db.UniqueConstraint('project_id', 'user_id'),)
 
+    def __repr__(self):
+        return f'<ProjectMember {self.user_id} in {self.project_id}>'
+
 class TestScript(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     tags = db.Column(db.String(255))  # Comma-separated tags
-
-    # File paths
-    playwright_script_path = db.Column(db.String(512))
-    robot_script_path = db.Column(db.String(512))
-
-    # Metadata
+    playwright_script_path = db.Column(db.String(255))
+    robot_script_path = db.Column(db.String(255))
     browser_type = db.Column(db.String(20))  # chromium, firefox, webkit
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-    # Conversion status
-    conversion_status = db.Column(db.String(20), default='pending')  # pending, completed, failed
+    conversion_status = db.Column(db.String(50), default='pending')
+    conversion_logs = db.Column(db.Text)
     conversion_error = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    created_by = db.relationship('User', backref='created_scripts')
-    execution_results = db.relationship('ExecutionResult', backref='test_script', lazy=True)
+    executions = db.relationship('ExecutionResult', backref='script', lazy=True)
     versions = db.relationship('ScriptVersion', backref='script', lazy=True, cascade='all, delete-orphan')
 
     def get_tags_list(self):
@@ -172,153 +128,12 @@ class ScriptVersion(db.Model):
     __table_args__ = (db.UniqueConstraint('script_id', 'version_number'),)
 
 class ExecutionStatus(enum.Enum):
-    PENDING = "pending"
-    RUNNING = "running"
-    PASSED = "passed"
-    FAILED = "failed"
-    ERROR = "error"
-
-class ExecutionResult(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    script_id = db.Column(db.Integer, db.ForeignKey('test_script.id'), nullable=True)  # Null for suite runs
-
-    # Execution metadata
-    status = db.Column(db.Enum(ExecutionStatus), default=ExecutionStatus.PENDING)
-    started_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    completed_at = db.Column(db.DateTime)
-    duration_seconds = db.Column(db.Float)
-
-    # Results data
-    tests_passed = db.Column(db.Integer, default=0)
-    tests_failed = db.Column(db.Integer, default=0)
-    tests_total = db.Column(db.Integer, default=0)
-
-    # File paths
-    log_path = db.Column(db.String(512))
-    report_path = db.Column(db.String(512))
-    output_xml_path = db.Column(db.String(512))
-    video_path = db.Column(db.String(512))
-
-    # Error information
-    error_message = db.Column(db.Text)
-
-    # Execution context
-    executed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    is_suite_run = db.Column(db.Boolean, default=False)
-    headless = db.Column(db.Boolean, default=True)
-
-    executed_by = db.relationship('User')
-
-    @property
-    def pass_rate(self):
-        if self.tests_total == 0:
-            return 0
-        return (self.tests_passed / self.tests_total) * 100
-
-    def __repr__(self):
-        script_name = self.test_script.name if self.test_script else 'Suite'
-        return f'<ExecutionResult {script_name} - {self.status.value}>'
-
-class InvitationToken(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), nullable=False)
-    token = db.Column(db.String(255), unique=True, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)  # Null for global invites
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
-    can_edit = db.Column(db.Boolean, default=False)
-    can_execute = db.Column(db.Boolean, default=True)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at = db.Column(db.DateTime, nullable=False)
-    used_at = db.Column(db.DateTime)
-
-    project = db.relationship('Project')
-    role = db.relationship('Role')
-    created_by = db.relationship('User')
-
-    @property
-    def is_expired(self):
-        return datetime.now(timezone.utc) > self.expires_at.replace(tzinfo=timezone.utc)
-
-    @property
-    def is_used(self):
-        return self.used_at is not None
-
-    def __repr__(self):
-        return f'<InvitationToken {self.email}>'
-
-# Initialize default roles
-def create_default_roles():
-    roles_data = [
-        ('Admin', 'Full system access including user management'),
-        ('Tester', 'Can create, edit, and execute tests'),
-        ('Viewer', 'Read-only access to test results and analytics')
-    ]
-
-    for name, description in roles_data:
-        if not Role.query.filter_by(name=name).first():
-            role = Role(name=name, description=description)
-            db.session.add(role)
-
-    db.session.commit()
-
-
-class ExecutionStatus(enum.Enum):
     PENDING = 'pending'
     RUNNING = 'running'
     PASSED = 'passed'
     FAILED = 'failed'
     ERROR = 'error'
     CANCELLED = 'cancelled'
-
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Relationships
-    scripts = db.relationship('TestScript', backref='project', lazy=True, cascade='all, delete-orphan')
-    executions = db.relationship('ExecutionResult', backref='project', lazy=True, cascade='all, delete-orphan')
-    members = db.relationship('ProjectMember', backref='project', lazy=True, cascade='all, delete-orphan')
-
-    def __repr__(self):
-        return f'<Project {self.name}>'
-
-class ProjectMember(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    can_edit = db.Column(db.Boolean, default=False)
-    can_execute = db.Column(db.Boolean, default=True)
-    added_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Relationships
-    user = db.relationship('User', backref='project_memberships')
-
-    def __repr__(self):
-        return f'<ProjectMember {self.user_id} in {self.project_id}>'
-
-class TestScript(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    playwright_script_path = db.Column(db.String(255))
-    robot_script_path = db.Column(db.String(255))
-    conversion_status = db.Column(db.String(50), default='pending')
-    conversion_logs = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Relationships
-    executions = db.relationship('ExecutionResult', backref='script', lazy=True)
-
-    def __repr__(self):
-        return f'<TestScript {self.name}>'
 
 class ExecutionResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -338,6 +153,8 @@ class ExecutionResult(db.Model):
     output_xml_path = db.Column(db.String(255))
     video_path = db.Column(db.String(255))
     executed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_suite_run = db.Column(db.Boolean, default=False)
+    headless = db.Column(db.Boolean, default=True)
 
     # Legacy properties for backward compatibility
     @property
@@ -377,9 +194,7 @@ class InvitationToken(db.Model):
     used_at = db.Column(db.DateTime)
 
     # Relationships
-    project = db.relationship('Project', backref='invitations')
     role = db.relationship('Role', backref='invitations')
-    created_by = db.relationship('User', backref='sent_invitations')
 
     @property
     def is_expired(self):
@@ -399,13 +214,13 @@ def create_default_roles():
         {'name': 'Tester', 'description': 'Can create and execute tests'},
         {'name': 'Viewer', 'description': 'Read-only access to assigned projects'}
     ]
-    
+
     for role_data in roles:
         existing_role = Role.query.filter_by(name=role_data['name']).first()
         if not existing_role:
             role = Role(name=role_data['name'], description=role_data['description'])
             db.session.add(role)
-    
+
     try:
         db.session.commit()
     except Exception as e:
