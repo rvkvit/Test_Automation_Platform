@@ -6,14 +6,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # Database settings
-    db_uri = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///instance/app.db")
-    if db_uri.startswith("sqlite:///") and not os.path.isabs(db_uri.replace("sqlite:///", "")):
-        # Convert to absolute path
-        project_root = Path(__file__).parent.parent.resolve()
-        rel_path = db_uri.replace("sqlite:///", "")
-        abs_path = project_root / rel_path
-        db_uri = f"sqlite:///{abs_path}"
-    SQLALCHEMY_DATABASE_URI = db_uri
+    project_root = Path(__file__).parent.parent.resolve()
+    db_path = project_root / "instance" / "app.db"
+    
+    # Ensure instance directory exists
+    db_path.parent.mkdir(exist_ok=True)
+    
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 300,

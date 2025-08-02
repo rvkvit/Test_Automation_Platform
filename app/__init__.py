@@ -67,45 +67,12 @@ def create_app():
     
     # Create database tables
     with app.app_context():
-        # Ensure SQLite database directory exists (handles both relative and absolute paths)
         db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-        if db_url.startswith('sqlite:///'):
-            db_path = db_url.replace('sqlite:///', '')
-            # Remove leading slash for relative paths like '/instance/app.db'
-            if db_path.startswith('/') or db_path.startswith('\\'):
-                db_path = db_path[1:]
-            # If path is not absolute, make it relative to instance folder in project root
-            if not os.path.isabs(db_path):
-                db_path = os.path.join(project_root, db_path)
-            db_dir = os.path.dirname(db_path)
-            print(f"Resolved SQLite DB path: {db_path}")  # Debugging
-            print(f"DB directory exists: {os.path.exists(db_dir)}, writable: {os.access(db_dir, os.W_OK)}")
-            print(f"DB file exists: {os.path.exists(db_path)}, writable: {os.access(db_path, os.W_OK)}")
-            if db_dir and not os.path.exists(db_dir):
-                os.makedirs(db_dir, exist_ok=True)
-            # Check write permission
-            if not os.access(db_dir, os.W_OK):
-                print(f"ERROR: Cannot write to database directory: {db_dir}")
-                import sys; sys.exit(1)
-            # Try to create the database file if it does not exist
-            if not os.path.exists(db_path):
-                try:
-                    open(db_path, 'a').close()
-                    print(f"Created SQLite DB file: {db_path}")
-                except Exception as e:
-                    print(f"ERROR: Cannot create database file: {db_path}\n{e}")
-                    import sys; sys.exit(1)
-            # Final check: can we write to the database file?
-            if not os.access(db_path, os.W_OK):
-                print(f"ERROR: Cannot write to database file: {db_path}")
-                import sys; sys.exit(1)
-            # Extra: print file stats for debugging
-            try:
-                import stat
-                st = os.stat(db_path)
-                print(f"DB file stat: mode={oct(st.st_mode)}, size={st.st_size}")
-            except Exception as e:
-                print(f"Could not stat DB file: {e}")
+        print(f"Using database: {db_url}")
+        
+        # Ensure instance directory exists
+        instance_dir = os.path.join(project_root, 'instance')
+        os.makedirs(instance_dir, exist_ok=True)
         
         # Import models to ensure they're registered
         from app import models
