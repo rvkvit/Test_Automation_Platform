@@ -17,7 +17,7 @@
                     </h1>
                     <p class="lead">Your ultimate test automation command center. Create, execute, and analyze tests with ease.</p>
                     <div class="mt-4">
-                        <a class="btn btn-light btn-lg me-3" href="{{ url_for('projects.index') }}">
+                        <a class="btn btn-light btn-lg me-3" href="{{ url_for('projects.list_projects') }}">
                             <i class="fas fa-folder me-2"></i>My Projects
                         </a>
                         <a class="btn btn-outline-light btn-lg" href="{{ url_for('recording.record') }}">
@@ -118,7 +118,7 @@
                         <div class="text-center py-4">
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                             <p class="text-muted">No recent activity. Start by creating your first project!</p>
-                            <a href="{{ url_for('projects.create') }}" class="btn btn-primary">
+                            <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
                                 <i class="fas fa-plus me-2"></i>Create Project
                             </a>
                         </div>
@@ -137,7 +137,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary">
+                        <a href="{{ url_for('projects.create_project') }}" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-2"></i>New Project
                         </a>
                         <a href="{{ url_for('recording.record') }}" class="btn btn-outline-success">

@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
-from app.analytics import AnalyticsService
+from datetime import datetime
+from app.models import Project, TestScript, ExecutionResult
+from app import db
 
 bp = Blueprint('main', __name__)
 
@@ -16,28 +18,46 @@ def index():
 def dashboard():
     """Main dashboard with overview metrics"""
     try:
-        # Get dashboard metrics
-        metrics = AnalyticsService.get_dashboard_metrics()
+        # Get basic counts
+        if current_user.has_role('Admin'):
+            project_count = Project.query.count()
+            script_count = TestScript.query.count()
+            execution_count = ExecutionResult.query.count()
+            recent_executions = ExecutionResult.query.order_by(ExecutionResult.started_at.desc()).limit(10).all()
+        else:
+            # User-specific data
+            user_projects = Project.query.filter_by(owner_id=current_user.id).all()
+            project_count = len(user_projects)
+            script_count = sum(len(p.test_scripts) for p in user_projects)
+            execution_count = ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id).count()
+            recent_executions = ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id).order_by(ExecutionResult.started_at.desc()).limit(10).all()
+        
+        # Calculate success rate
+        if execution_count > 0:
+            passed_count = ExecutionResult.query.filter_by(status='PASSED').count() if current_user.has_role('Admin') else ExecutionResult.query.join(TestScript).join(Project).filter(Project.owner_id == current_user.id, ExecutionResult.status == 'PASSED').count()
+            success_rate = round((passed_count / execution_count) * 100, 1)
+        else:
+            success_rate = 0
         
         return render_template('dashboard.html', 
                              title='Dashboard',
-                             metrics=metrics)
+                             project_count=project_count,
+                             script_count=script_count,
+                             execution_count=execution_count,
+                             success_rate=success_rate,
+                             recent_executions=recent_executions)
     except Exception as e:
         # Handle any errors gracefully
         import logging
         logging.error(f"Dashboard error: {str(e)}")
         
-        # Fallback metrics
-        fallback_metrics = {
-            'total_projects': 0,
-            'total_scripts': 0,
-            'recent_executions': [],
-            'pass_rate_7_days': 0
-        }
-        
         return render_template('dashboard.html', 
                              title='Dashboard',
-                             metrics=fallback_metrics,
+                             project_count=0,
+                             script_count=0,
+                             execution_count=0,
+                             success_rate=0,
+                             recent_executions=[],
                              error='Unable to load dashboard metrics')
 
 @bp.route('/health')
