@@ -64,7 +64,7 @@ def login():
             if not next_page or not is_safe_url(next_page):
                 next_page = url_for('main.dashboard')
             
-            flash(f'Welcome back, {user.username}!', 'success')
+            flash(f'Welcome back to TestCraft Pro, {user.username}!', 'success')
             return redirect(next_page)
         else:
             flash('Invalid email or password.', 'danger')
@@ -152,7 +152,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            flash('Registration successful! You can now log in.', 'success')
+            flash('Welcome to TestCraft Pro! Your account has been created successfully. You can now log in.', 'success')
             return redirect(url_for('auth.login'))
             
         except Exception as e:
@@ -169,7 +169,7 @@ def logout():
     """User logout"""
     username = current_user.username
     logout_user()
-    flash(f'You have been logged out. Goodbye, {username}!', 'info')
+    flash(f'You have been logged out from TestCraft Pro. Thank you for using our platform, {username}!', 'info')
     return redirect(url_for('auth.login'))
 
 @bp.route('/accept-invite')

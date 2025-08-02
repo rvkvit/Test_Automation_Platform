@@ -1,231 +1,217 @@
 {% extends "base.html" %}
-
+```
+```html
 {% block content %}
-<div class="container mt-4">
+```
+```html
+<div class="container-fluid">
+```
+```html
+    <!-- Hero Section -->
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h2 mb-0">
-                    <i class="fas fa-tachometer-alt me-2"></i>
-                    Dashboard
-                </h1>
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('recording.index') }}" class="btn btn-primary">
-                        <i class="fas fa-video me-1"></i>Record New Test
-                    </a>
-                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-plus me-1"></i>New Project
-                    </a>
+            <div class="jumbotron bg-gradient text-white p-5 rounded-3 mb-4" style="background: linear-gradient(135deg, #4CAF50, #45a049);">
+                <div class="container">
+                    <h1 class="display-4 fw-bold">
+                        <i class="fas fa-bolt me-3"></i>Welcome to TestCraft Pro
+                    </h1>
+                    <p class="lead">Your ultimate test automation command center. Create, execute, and analyze tests with ease.</p>
+                    <div class="mt-4">
+                        <a class="btn btn-light btn-lg me-3" href="{{ url_for('projects.index') }}">
+                            <i class="fas fa-folder me-2"></i>My Projects
+                        </a>
+                        <a class="btn btn-outline-light btn-lg" href="{{ url_for('recording.record') }}">
+                            <i class="fas fa-video me-2"></i>Start Recording
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Overview Cards -->
+```
+```html
+    <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ metrics.total_projects }}</h3>
-                            <p class="mb-0">Total Projects</p>
-                        </div>
-                        <i class="fas fa-folder fa-2x opacity-75"></i>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-4 text-primary mb-3">
+                        <i class="fas fa-folder"></i>
                     </div>
+                    <h3 class="h4">{{ project_count }}</h3>
+                    <p class="text-muted mb-0">Total Projects</p>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ metrics.total_scripts }}</h3>
-                            <p class="mb-0">Test Scripts</p>
-                        </div>
-                        <i class="fas fa-file-code fa-2x opacity-75"></i>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-4 text-success mb-3">
+                        <i class="fas fa-file-code"></i>
                     </div>
+                    <h3 class="h4">{{ script_count }}</h3>
+                    <p class="text-muted mb-0">Test Scripts</p>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ metrics.pass_rate_7_days }}%</h3>
-                            <p class="mb-0">Pass Rate (7 days)</p>
-                        </div>
-                        <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-4 text-info mb-3">
+                        <i class="fas fa-play"></i>
                     </div>
+                    <h3 class="h4">{{ execution_count }}</h3>
+                    <p class="text-muted mb-0">Executions</p>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ metrics.recent_executions|length }}</h3>
-                            <p class="mb-0">Recent Runs</p>
-                        </div>
-                        <i class="fas fa-play fa-2x opacity-75"></i>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-4 text-warning mb-3">
+                        <i class="fas fa-chart-line"></i>
                     </div>
+                    <h3 class="h4">{{ success_rate }}%</h3>
+                    <p class="text-muted mb-0">Success Rate</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Recent Executions -->
+```
+```html
+    <!-- Recent Activity -->
     <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-history me-2"></i>
-                        Recent Test Executions
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent Activity
                     </h5>
-                    <a href="{{ url_for('execution.list_results') }}" class="btn btn-sm btn-outline-primary">
-                        View All
-                    </a>
                 </div>
                 <div class="card-body">
-                    {% if metrics.recent_executions %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Script</th>
-                                    <th>Status</th>
-                                    <th>Duration</th>
-                                    <th>Started</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for execution in metrics.recent_executions %}
-                                <tr>
-                                    <td>
-                                        <i class="fas fa-folder me-1"></i>
-                                        {{ execution.project_name }}
-                                    </td>
-                                    <td>
-                                        {% if execution.is_suite %}
-                                            <i class="fas fa-list me-1"></i>
-                                            <em>Suite Run</em>
+                    {% if recent_executions %}
+                        <div class="list-group list-group-flush">
+                            {% for execution in recent_executions %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ execution.test_script.name }}</h6>
+                                        <p class="mb-1 text-muted small">{{ execution.project.name }}</p>
+                                        <small class="text-muted">{{ execution.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <div>
+                                        {% if execution.status.name == 'COMPLETED' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif execution.status.name == 'FAILED' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% elif execution.status.name == 'RUNNING' %}
+                                            <span class="badge bg-primary">Running</span>
                                         {% else %}
-                                            <i class="fas fa-file-code me-1"></i>
-                                            {{ execution.script_name }}
+                                            <span class="badge bg-warning">{{ execution.status.name }}</span>
                                         {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if execution.status == 'passed' else 'danger' if execution.status == 'failed' else 'warning' if execution.status == 'running' else 'secondary' }}">
-                                            {% if execution.status == 'passed' %}
-                                                <i class="fas fa-check me-1"></i>Passed
-                                            {% elif execution.status == 'failed' %}
-                                                <i class="fas fa-times me-1"></i>Failed
-                                            {% elif execution.status == 'running' %}
-                                                <i class="fas fa-spinner fa-spin me-1"></i>Running
-                                            {% else %}
-                                                <i class="fas fa-clock me-1"></i>{{ execution.status.title() }}
-                                            {% endif %}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if execution.duration %}
-                                            {{ "%.1f"|format(execution.duration) }}s
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">
-                                            {{ execution.started_at.strftime('%m/%d %H:%M') if execution.started_at else '-' }}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        {% if not execution.is_suite and execution.script_id and execution.project_id %}
-                                            <a href="{{ url_for('projects.edit_script', id=execution.project_id, script_id=execution.script_id) }}" 
-                                               class="btn btn-sm btn-outline-info" title="Edit Script">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        {% else %}
-                                            <span class="text-muted"><i class="fas fa-eye-slash"></i></span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No test executions yet</h5>
-                        <p class="text-muted">Start by creating a project and recording your first test.</p>
-                    </div>
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent activity. Start by creating your first project!</p>
+                            <a href="{{ url_for('projects.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Project
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2"></i>
-                        Quick Actions
+```
+```html
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-rocket me-2"></i>Quick Actions
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="d-grid">
-                                <a href="{{ url_for('recording.index') }}" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-video me-2"></i>
-                                    Record New Test
-                                </a>
-                            </div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>New Project
+                        </a>
+                        <a href="{{ url_for('recording.record') }}" class="btn btn-outline-success">
+                            <i class="fas fa-video me-2"></i>Record Test
+                        </a>
+                        <a href="{{ url_for('analytics.index') }}" class="btn btn-outline-info">
+                            <i class="fas fa-chart-bar me-2"></i>View Analytics
+                        </a>
+                        {% if current_user.has_role('Admin') %}
+                        <a href="{{ url_for('team.index') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-users me-2"></i>Manage Team
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+```
+```html
+            <!-- System Info -->
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header bg-white border-0">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>System Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small text-muted">
+                        <div class="d-flex justify-content-between">
+                            <span>Platform:</span>
+                            <span class="text-success">TestCraft Pro v2.0</span>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="d-grid">
-                                <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-primary btn-lg">
-                                    <i class="fas fa-folder me-2"></i>
-                                    Manage Projects
-                                </a>
-                            </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Status:</span>
+                            <span class="text-success">
+                                <i class="fas fa-circle fa-xs me-1"></i>Online
+                            </span>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="d-grid">
-                                <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-outline-info btn-lg">
-                                    <i class="fas fa-chart-line me-2"></i>
-                                    View Analytics
-                                </a>
-                            </div>
+                        <div class="d-flex justify-content-between">
+                            <span>User:</span>
+                            <span>{{ current_user.username }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Role:</span>
+                            <span class="badge bg-primary">{{ current_user.role.name }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Integrations Section -->
 </div>
+```
+```html
+<style>
+.jumbotron {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-radius: 15px !important;
+}
 
-{% if error %}
-<div class="container mt-3">
-    <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        {{ error }}
-    </div>
-</div>
-{% endif %}
+.card {
+    transition: transform 0.2s ease-in-out;
+    border-radius: 10px !important;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
 {% endblock %}
+```
+
+```
+</replit_final_file>

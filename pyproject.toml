@@ -19,4 +19,8 @@ dependencies = [
     "flask-migrate>=4.1.0",
     "python-dotenv>=1.1.1",
     "robotframework-browser>=19.6.2",
+    "flask-wtf>=1.2.2",
+    "pyautogui>=0.9.54",
+    "pillow>=11.3.0",
+    "opencv-python>=4.12.0.88",
 ]

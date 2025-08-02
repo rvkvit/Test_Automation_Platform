@@ -37,7 +37,7 @@ def create_app():
     login_manager.init_app(app)
     csrf.init_app(app)  # Add this line
     login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message = 'Please log in to access TestCraft Pro.'
     login_manager.login_message_category = 'info'
     
     # User loader for Flask-Login
@@ -118,7 +118,7 @@ def create_app():
         
         # Check for existing admin user by username or email
         admin_exists = User.query.filter(
-            (User.username == 'admin') | (User.email == 'qacoe@tcslt.com')
+            (User.username == 'TestCraftAdmin') | (User.email == 'admin@testcraft.pro')
         ).first()
         if not admin_exists:
             admin_role = Role.query.filter_by(name='Admin').first()
@@ -127,16 +127,16 @@ def create_app():
                 db.session.add(admin_role)
                 db.session.commit()  # Commit role if newly created
             admin_user = User(
-                username='QA-COE',
-                email='qacoe@tcslt.com',
-                password_hash=generate_password_hash('1234'),
+                username='TestCraftAdmin',
+                email='admin@testcraft.pro',
+                password_hash=generate_password_hash('TestCraft2024!'),
                 role=admin_role,
                 is_active=True
             )
             db.session.add(admin_user)
             db.session.commit()
-            print("Default admin user created:")
-            print("  Email: qacoe@tcslt.com")
-            print("  Password: 1234")
+            print("TestCraft Pro admin user created:")
+            print("  Email: admin@testcraft.pro")
+            print("  Password: TestCraft2024!")
     
     return app

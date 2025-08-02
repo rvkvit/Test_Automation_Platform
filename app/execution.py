@@ -9,6 +9,10 @@ from app import create_app
 from robot import run_cli
 from robot.api import get_model
 import logging
+import cv2
+import numpy as np
+from threading import Thread
+import time
 
 from app import db
 from app.models import ExecutionResult, ExecutionStatus, TestScript
@@ -17,6 +21,53 @@ from app.utils.environment import get_runtime_info
 from app.config import Config
 
 logger = logging.getLogger(__name__)
+
+class TestRecorder:
+    """Records video during test execution"""
+    
+    def __init__(self):
+        self.recording = False
+        self.output_path = None
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.fps = 10.0
+        self.frame_size = (1920, 1080)
+        
+    def start_recording(self, output_path):
+        """Start recording test execution"""
+        self.output_path = output_path
+        self.recording = True
+        self.video_writer = cv2.VideoWriter(output_path, self.fourcc, self.fps, self.frame_size)
+        
+        # Start recording thread
+        self.record_thread = Thread(target=self._record_loop)
+        self.record_thread.daemon = True
+        self.record_thread.start()
+        
+    def stop_recording(self):
+        """Stop recording"""
+        self.recording = False
+        if hasattr(self, 'video_writer'):
+            self.video_writer.release()
+        
+    def _record_loop(self):
+        """Recording loop - captures screen periodically"""
+        import pyautogui
+        
+        while self.recording:
+            try:
+                # Capture screenshot
+                screenshot = pyautogui.screenshot()
+                frame = np.array(screenshot)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                frame = cv2.resize(frame, self.frame_size)
+                
+                if hasattr(self, 'video_writer'):
+                    self.video_writer.write(frame)
+                    
+                time.sleep(1.0 / self.fps)
+            except Exception as e:
+                logger.error(f"Recording error: {e}")
+                break
 
 class RobotFrameworkExecutor:
     def __init__(self, project, headless=True):
