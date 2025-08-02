@@ -86,6 +86,8 @@ def setup_environment_variables():
     
     return runtime_info
 
+import os
+
 def check_system_dependencies():
     """
     Check if required system dependencies are available
@@ -201,13 +203,37 @@ def detect_container_environment():
     
     return any(indicators)
 
+def get_runtime_info():
+    """Get basic runtime information"""
+    import platform
+    import sys
+    from pathlib import Path
+    
+    return {
+        'system': platform.system(),
+        'python_version': sys.version,
+        'data_root': Path.cwd(),
+        'is_headless': not bool(os.environ.get('DISPLAY')),
+        'is_linux': platform.system() == 'Linux'
+    }
+
+def detect_container_environment():
+    """Detect if running in a container"""
+    return {
+        'docker': os.path.exists('/.dockerenv'),
+        'replit': 'REPL_ID' in os.environ,
+        'github_codespaces': 'CODESPACES' in os.environ
+    }
+
+def get_temp_directory():
+    """Get appropriate temp directory"""
+    import tempfile
+    return Path(tempfile.gettempdir())
+
 def get_system_info():
     """
     Get comprehensive system information for diagnostics
     """
-    # Add missing imports for referenced functions
-    from app.utils.environment import get_runtime_info, check_system_dependencies, detect_container_environment, get_temp_directory
-    
     runtime_info = get_runtime_info()
     dependencies = check_system_dependencies()
     
