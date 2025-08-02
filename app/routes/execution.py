@@ -20,7 +20,8 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from flask_login import login_required, current_user
 from datetime import datetime, timezone
 from app import db
-from app.models import Project, TestScript, ExecutionResult, ExecutionStatus
+from app.models import Project, TestScript, ExecutionResult, ExecutionStatus, ProjectMember
+from app.utils.security import generate_csrf_token
 
 bp = Blueprint('execution', __name__)
 
@@ -28,54 +29,78 @@ bp = Blueprint('execution', __name__)
 @bp.route('/results')
 @login_required
 def list_results():
-    """List execution results"""
+    """List execution results accessible to the user"""
     page = request.args.get('page', 1, type=int)
-    project_id = request.args.get('project_id')
+    project_id = request.args.get('project_id', type=int)
     status_filter = request.args.get('status')
 
     # Base query
     query = ExecutionResult.query
 
-    # Filter by project if specified
+    # Filter by project access
+    if not current_user.has_role('Admin'):
+        # Get accessible project IDs
+        accessible_project_ids = []
+
+        # Owned projects
+        owned_projects = Project.query.filter_by(owner_id=current_user.id).all()
+        accessible_project_ids.extend([p.id for p in owned_projects])
+
+        # Member projects
+        member_projects = db.session.query(Project.id).join(
+            ProjectMember, Project.id == ProjectMember.project_id
+        ).filter(ProjectMember.user_id == current_user.id).all()
+        accessible_project_ids.extend([p.id for p in member_projects])
+
+        if accessible_project_ids:
+            query = query.filter(ExecutionResult.project_id.in_(accessible_project_ids))
+        else:
+            # User has no accessible projects
+            query = query.filter(False)
+
+    # Apply filters
     if project_id:
         query = query.filter(ExecutionResult.project_id == project_id)
-    elif not current_user.has_role('Admin'):
-        # Filter to user's projects only
-        user_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        project_ids = [p.id for p in user_projects]
-        if project_ids:
-            query = query.filter(ExecutionResult.project_id.in_(project_ids))
-        else:
-            query = query.filter(False)  # No results
 
-    # Filter by status if specified
     if status_filter and status_filter != 'all':
         try:
             status_enum = ExecutionStatus(status_filter)
             query = query.filter(ExecutionResult.status == status_enum)
         except ValueError:
-            pass  # Invalid status, ignore
+            pass  # Invalid status filter, ignore
 
     # Order by most recent first
     query = query.order_by(ExecutionResult.started_at.desc())
 
     # Paginate
+    per_page = getattr(Config, 'RESULTS_PER_PAGE', 20)
     executions = query.paginate(
-        page=page, per_page=20, error_out=False
+        page=page,
+        per_page=per_page,
+        error_out=False
     )
 
     # Get projects for filter dropdown
     if current_user.has_role('Admin'):
         projects = Project.query.order_by(Project.name).all()
     else:
-        projects = Project.query.filter_by(owner_id=current_user.id).order_by(Project.name).all()
+        # Get accessible projects for filter
+        owned_projects = Project.query.filter_by(owner_id=current_user.id).all()
+        member_projects = db.session.query(Project).join(
+            ProjectMember, Project.id == ProjectMember.project_id
+        ).filter(ProjectMember.user_id == current_user.id).all()
+
+        project_dict = {p.id: p for p in owned_projects + member_projects}
+        projects = list(project_dict.values())
+        projects.sort(key=lambda p: p.name)
 
     return render_template('execution_results.html',
                          title='Execution Results',
                          executions=executions,
                          projects=projects,
                          current_project_id=project_id,
-                         current_status=status_filter)
+                         current_status=status_filter,
+                         execution_statuses=[status.value for status in ExecutionStatus])
 
 @bp.route('/<int:execution_id>')
 @login_required
@@ -261,81 +286,7 @@ def execute_project_suite(project_id):
     except Exception as e:
         return jsonify({'success': False, 'error': f'Failed to start suite execution: {str(e)}'})
 
-@bp.route('/results')
-@login_required
-def list_results():
-    """List execution results accessible to the user"""
-    page = request.args.get('page', 1, type=int)
-    project_id = request.args.get('project_id', type=int)
-    status_filter = request.args.get('status')
 
-    # Base query
-    query = ExecutionResult.query
-
-    # Filter by project access
-    if not current_user.has_role('Admin'):
-        # Get accessible project IDs
-        accessible_project_ids = []
-
-        # Owned projects
-        owned_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        accessible_project_ids.extend([p.id for p in owned_projects])
-
-        # Member projects
-        from app.models import ProjectMember
-        member_projects = db.session.query(Project.id).join(
-            ProjectMember, Project.id == ProjectMember.project_id
-        ).filter(ProjectMember.user_id == current_user.id).all()
-        accessible_project_ids.extend([p.id for p in member_projects])
-
-        if accessible_project_ids:
-            query = query.filter(ExecutionResult.project_id.in_(accessible_project_ids))
-        else:
-            # User has no accessible projects
-            query = query.filter(False)
-
-    # Apply filters
-    if project_id:
-        query = query.filter(ExecutionResult.project_id == project_id)
-
-    if status_filter:
-        try:
-            status_enum = ExecutionStatus(status_filter)
-            query = query.filter(ExecutionResult.status == status_enum)
-        except ValueError:
-            pass  # Invalid status filter, ignore
-
-    # Order by most recent first
-    query = query.order_by(ExecutionResult.started_at.desc())
-
-    # Paginate
-    executions = query.paginate(
-        page=page,
-        per_page=Config.RESULTS_PER_PAGE,
-        error_out=False
-    )
-
-    # Get projects for filter dropdown
-    if current_user.has_role('Admin'):
-        projects = Project.query.order_by(Project.name).all()
-    else:
-        # Get accessible projects for filter
-        owned_projects = Project.query.filter_by(owner_id=current_user.id).all()
-        member_projects = db.session.query(Project).join(
-            ProjectMember, Project.id == ProjectMember.project_id
-        ).filter(ProjectMember.user_id == current_user.id).all()
-
-        project_dict = {p.id: p for p in owned_projects + member_projects}
-        projects = list(project_dict.values())
-        projects.sort(key=lambda p: p.name)
-
-    return render_template('execution_results.html',
-                         title='Execution Results',
-                         executions=executions,
-                         projects=projects,
-                         current_project_id=project_id,
-                         current_status=status_filter,
-                         execution_statuses=[status.value for status in ExecutionStatus])
 
 @bp.route('/results/<int:execution_id>')
 @login_required
