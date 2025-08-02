@@ -50,20 +50,36 @@ def create_app():
     from app.routes.main import bp as main_bp
     from app.routes.auth import bp as auth_bp
     from app.routes.projects import bp as projects_bp
-    from app.routes.recording import bp as recording_bp
-    from app.routes.execution import bp as execution_bp
+    try:
+        from app.routes.recording import bp as recording_bp
+    except ImportError:
+        recording_bp = None
+    try:
+        from app.routes.execution import bp as execution_bp
+    except ImportError:
+        execution_bp = None
     from app.routes.analytics import bp as analytics_bp
-    from app.routes.team import bp as team_bp
-    from app.routes.integrations import bp as integrations_bp
+    try:
+        from app.routes.team import bp as team_bp
+    except ImportError:
+        team_bp = None
+    try:
+        from app.routes.integrations import bp as integrations_bp
+    except ImportError:
+        integrations_bp = None
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(projects_bp, url_prefix='/projects')
-    app.register_blueprint(recording_bp, url_prefix='/record')
-    app.register_blueprint(execution_bp, url_prefix='/execute')
+    if recording_bp:
+        app.register_blueprint(recording_bp, url_prefix='/record')
+    if execution_bp:
+        app.register_blueprint(execution_bp, url_prefix='/execute')
     app.register_blueprint(analytics_bp, url_prefix='/analytics')
-    app.register_blueprint(team_bp, url_prefix='/team')
-    app.register_blueprint(integrations_bp, url_prefix='/integrations')
+    if team_bp:
+        app.register_blueprint(team_bp, url_prefix='/team')
+    if integrations_bp:
+        app.register_blueprint(integrations_bp, url_prefix='/integrations')
     
     # Create database tables
     with app.app_context():

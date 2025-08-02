@@ -143,11 +143,11 @@
                         <a href="{{ url_for('recording.index') }}" class="btn btn-outline-success">
                             <i class="fas fa-video me-2"></i>Record Test
                         </a>
-                        <a href="{{ url_for('analytics.index') }}" class="btn btn-outline-info">
+                        <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-outline-info">
                             <i class="fas fa-chart-bar me-2"></i>View Analytics
                         </a>
                         {% if current_user.has_role('Admin') %}
-                        <a href="{{ url_for('team.index') }}" class="btn btn-outline-warning">
+                        <a href="{{ url_for('team.dashboard') }}" class="btn btn-outline-warning">
                             <i class="fas fa-users me-2"></i>Manage Team
                         </a>
                         {% endif %}

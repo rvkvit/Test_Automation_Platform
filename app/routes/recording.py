@@ -23,6 +23,12 @@ bp = Blueprint('recording', __name__)
 @bp.route('/')
 @login_required
 def index():
+    """Recording dashboard/index page"""
+    return render_template('record.html', title='Record Tests')
+
+@bp.route('/')
+@login_required
+def index():
     """Recording dashboard - show available projects"""
     # Get projects user can record in
     if current_user.has_role('Admin'):
@@ -489,3 +495,26 @@ def inject_csrf_token():
     """Inject CSRF token into session for AJAX requests"""
     if 'csrf_token' not in session:
         session['csrf_token'] = generate_csrf_token()
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask_login import login_required, current_user
+from datetime import datetime
+
+bp = Blueprint('recording', __name__)
+
+@bp.route('/')
+@login_required
+def index():
+    """Recording dashboard/index page"""
+    return render_template('record.html', title='Record Tests')
+
+@bp.route('/start')
+@login_required
+def start_recording():
+    """Start a new recording session"""
+    return render_template('record.html', title='Start Recording', recording=True)
+
+@bp.route('/stop')
+@login_required
+def stop_recording():
+    """Stop current recording session"""
+    return jsonify({'success': True, 'message': 'Recording stopped'})

@@ -51,6 +51,7 @@ class ProjectForm(FlaskForm):
 @bp.route('/')
 @login_required
 def list_projects():
+def list_projects():
     """List all projects accessible to the current user"""
     if current_user.has_role('Admin'):
         # Admin can see all projects

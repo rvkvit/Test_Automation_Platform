@@ -416,3 +416,41 @@ def inject_csrf_token():
     """Inject CSRF token into session for AJAX requests"""
     if 'csrf_token' not in session:
         session['csrf_token'] = generate_csrf_token()
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask_login import login_required, current_user
+from datetime import datetime
+from app.models import ExecutionResult, Project, TestScript
+from app import db
+
+bp = Blueprint('execution', __name__)
+
+@bp.route('/results')
+@login_required
+def list_results():
+    """List execution results"""
+    # Get user's accessible results
+    if current_user.has_role('Admin'):
+        results = ExecutionResult.query.order_by(ExecutionResult.started_at.desc()).limit(50).all()
+    else:
+        results = ExecutionResult.query.join(Project).filter(
+            Project.owner_id == current_user.id
+        ).order_by(ExecutionResult.started_at.desc()).limit(50).all()
+    
+    return render_template('execution_results.html', 
+                         title='Execution Results', 
+                         results=results)
+
+@bp.route('/result/<int:result_id>')
+@login_required
+def view_result(result_id):
+    """View detailed execution result"""
+    result = ExecutionResult.query.get_or_404(result_id)
+    
+    # Check access permissions
+    if not current_user.has_role('Admin') and result.project.owner_id != current_user.id:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('execution.list_results'))
+    
+    return render_template('execution_detail.html', 
+                         title=f'Execution Result #{result.id}', 
+                         result=result)
