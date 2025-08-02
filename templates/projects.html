@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-folder me-2"></i>
+                    Projects
+                </h1>
+                <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Project
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <a href="{{ url_for('projects.detail', id=project.id) }}" 
+                           class="text-decoration-none">
+                            {{ project.name }}
+                        </a>
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('projects.detail', id=project.id) }}">
+                                    <i class="fas fa-eye me-2"></i>View Details
+                                </a>
+                            </li>
+                            {% if current_user.can_edit_project(project) %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('projects.edit_project', id=project.id) }}">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('analytics.project_analytics', project_id=project.id) }}">
+                                    <i class="fas fa-chart-line me-2"></i>Analytics
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if project.description %}
+                    <p class="text-muted">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                    
+                    {% if project.base_url %}
+                    <p class="text-muted">
+                        <i class="fas fa-link me-1"></i>
+                        <small>{{ project.base_url }}</small>
+                    </p>
+                    {% endif %}
+                    
+                    <!-- Project Statistics -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h6 class="mb-0">{{ project_stats[project.id].total_scripts }}</h6>
+                                <small class="text-muted">Scripts</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h6 class="mb-0">{{ project_stats[project.id].converted_scripts }}</h6>
+                                <small class="text-muted">Ready</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            {% if project_stats[project.id].last_execution_status %}
+                            <span class="badge bg-{{ 'success' if project_stats[project.id].last_execution_status == 'passed' else 'danger' if project_stats[project.id].last_execution_status == 'failed' else 'warning' }}">
+                                {{ project_stats[project.id].last_execution_status.title() }}
+                            </span>
+                            {% else %}
+                            <small class="text-muted">No runs</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>
+                            {{ project.owner.username }}
+                        </small>
+                        <small class="text-muted">
+                            {% if project_stats[project.id].last_execution %}
+                                Last run: {{ project_stats[project.id].last_execution.strftime('%m/%d %H:%M') }}
+                            {% else %}
+                                Created: {{ project.created_at.strftime('%m/%d/%Y') }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No Projects Yet</h3>
+                <p class="text-muted mb-4">
+                    Create your first project to get started with test automation.
+                </p>
+                <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create Your First Project
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

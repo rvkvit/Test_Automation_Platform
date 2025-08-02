@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Invite Team Member
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ email or '' }}" required 
+                                   placeholder="Enter the person's email address">
+                            <div class="form-text">
+                                An invitation will be sent to this email address
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="role_id" class="form-label">Role <span class="text-danger">*</span></label>
+                            <select class="form-select" id="role_id" name="role_id" required>
+                                <option value="">Select a role...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" 
+                                        {% if role_id == role.id %}selected{% endif %}>
+                                    {{ role.name }} - {{ role.description }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Choose the appropriate role for this team member
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="project_id" class="form-label">Project (Optional)</label>
+                            <select class="form-select" id="project_id" name="project_id">
+                                <option value="">No specific project (global access)</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" 
+                                        {% if project_id == project.id %}selected{% endif %}>
+                                    {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Optionally restrict access to a specific project
+                            </div>
+                        </div>
+                        
+                        <!-- Project-specific permissions (shown when project is selected) -->
+                        <div id="projectPermissions" class="mb-3" style="display: none;">
+                            <label class="form-label">Project Permissions</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="can_edit" name="can_edit" 
+                                       {% if can_edit %}checked{% endif %}>
+                                <label class="form-check-label" for="can_edit">
+                                    Can Edit
+                                </label>
+                                <div class="form-text">Allow editing of test scripts and project settings</div>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="can_execute" name="can_execute" 
+                                       checked>
+                                <label class="form-check-label" for="can_execute">
+                                    Can Execute
+                                </label>
+                                <div class="form-text">Allow running test scripts and viewing results</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('team.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>Send Invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Role Descriptions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-crown fa-2x text-warning mb-2"></i>
+                                <h6>Admin</h6>
+                                <p class="text-muted small">
+                                    Full system access including user management, all projects, and system settings
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-wrench fa-2x text-success mb-2"></i>
+                                <h6>Tester</h6>
+                                <p class="text-muted small">
+                                    Can create, edit, and execute tests. Can manage assigned projects
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-eye fa-2x text-info mb-2"></i>
+                                <h6>Viewer</h6>
+                                <p class="text-muted small">
+                                    Read-only access to test results, analytics, and project data
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide project permissions based on project selection
+document.getElementById('project_id').addEventListener('change', function() {
+    const projectPermissions = document.getElementById('projectPermissions');
+    if (this.value) {
+        projectPermissions.style.display = 'block';
+    } else {
+        projectPermissions.style.display = 'none';
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const projectSelect = document.getElementById('project_id');
+    if (projectSelect.value) {
+        document.getElementById('projectPermissions').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

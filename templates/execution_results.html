@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="h2 mb-4"><i class="fas fa-list me-2"></i>Test Execution Results</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="text-muted">Below is a list of all test execution results. Click 'Run' to start a test and view its live recording.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Script Name</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for execution in executions.items %}
+                    <tr id="execution-row-{{ execution.id }}">
+                        <td>{{ execution.test_script.name if execution.test_script else 'Suite Run' }}</td>
+                        <td id="status-{{ execution.id }}">{{ execution.status.value }}</td>
+                        <td>{{ execution.started_at }}</td>
+                        <td>{{ execution.completed_at }}</td>
+                        <td>{{ execution.duration_seconds }}</td>
+                        <td>
+                            {% if execution.status.value in ['PENDING', 'RUNNING'] and execution.video_path %}
+                                <button class="btn btn-primary btn-sm" onclick="showLiveVideo('{{ execution.id }}')">Live</button>
+                            {% elif execution.video_path %}
+                                <button class="btn btn-outline-primary btn-sm" title="Play Video" onclick="showVideoModal('{{ url_for('execution.stream_execution_video', execution_id=execution.id) }}')">
+                                    <i class="fas fa-play-circle"></i>
+                                </button>
+                            {% else %}
+                                <span class="text-muted">No Video</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Live video modal -->
+    <div class="modal fade" id="liveVideoModal" tabindex="-1" aria-labelledby="liveVideoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="liveVideoLabel">Live Test Execution</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <video id="liveVideoPlayer" width="100%" controls autoplay>
+              <source id="liveVideoSource" src="" type="video/webm">
+              Your browser does not support the video tag.
+            </video>
+            <div id="liveStatus" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed execution video modal -->
+    <div class="modal fade" id="completedVideoModal" tabindex="-1" aria-labelledby="completedVideoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="completedVideoLabel">Test Execution Video</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <video id="completedVideoPlayer" width="100%" controls>
+              <source id="completedVideoSource" src="" type="video/webm">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showLiveVideo(executionId) {
+    const modal = new bootstrap.Modal(document.getElementById('liveVideoModal'));
+    document.getElementById('liveVideoSource').src = `/execute/results/${executionId}/video`;
+    document.getElementById('liveVideoPlayer').load();
+    document.getElementById('liveStatus').innerText = 'Execution in progress...';
+    modal.show();
+    pollExecutionStatus(executionId);
+}
+
+function showVideoModal(videoUrl) {
+    const modal = new bootstrap.Modal(document.getElementById('completedVideoModal'));
+    document.getElementById('completedVideoSource').src = videoUrl;
+    document.getElementById('completedVideoPlayer').load();
+    modal.show();
+}
+
+function pollExecutionStatus(executionId) {
+    fetch(`/execute/status/${executionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('status-' + executionId).innerText = data.status;
+                if (data.status === 'RUNNING' || data.status === 'PENDING') {
+                    document.getElementById('liveStatus').innerText = 'Execution in progress...';
+                    setTimeout(function() { pollExecutionStatus(executionId); }, 2000);
+                } else {
+                    document.getElementById('liveStatus').innerText = 'Execution completed.';
+                }
+            } else {
+                document.getElementById('liveStatus').innerText = 'Error: ' + (data.error || 'Unknown error');
+            }
+        })
+        .catch(() => {
+            document.getElementById('liveStatus').innerText = 'Unable to fetch status.';
+        });
+}
+</script>
+{% endblock %}

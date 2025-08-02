@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-primary-emphasis">
+                        <i class="fas fa-plug me-2"></i>Integrations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <!-- BrowserStack -->
+                        <div class="col-md-4 d-flex">
+                            <div class="border rounded-4 p-4 w-100 d-flex flex-column align-items-center text-center bg-light justify-content-between" style="min-height: 320px;">
+                                <img src="https://www.browserstack.com/images/layout/browserstack-logo-600x315.png" alt="BrowserStack" style="height:70px;max-width:100%;object-fit:contain;background:transparent;" class="mb-3">
+                                <h6 class="fw-bold mb-2">BrowserStack</h6>
+                                <p class="small text-muted mb-3 flex-grow-1">Run your automation scripts on 3000+ real browsers and devices in the cloud.</p>
+                                <button type="button" class="btn btn-outline-primary rounded-pill px-4 mt-auto" data-bs-toggle="modal" data-bs-target="#browserstackModal">Connect</button>
+                            </div>
+                        </div>
+                        <!-- Azure Repos -->
+                        <div class="col-md-4 d-flex">
+                            <div class="border rounded-4 p-4 w-100 d-flex flex-column align-items-center text-center bg-light justify-content-between" style="min-height: 320px;">
+                                <img src="https://cdn.worldvectorlogo.com/logos/microsoft-azure-2.svg" alt="Azure Repos" style="height:70px;max-width:100%;object-fit:contain;background:transparent;" class="mb-3">
+                                <h6 class="fw-bold mb-2">Azure Repos</h6>
+                                <p class="small text-muted mb-3 flex-grow-1">Push your automation scripts directly to your Azure Git repositories.</p>
+                                <button type="button" class="btn btn-outline-primary rounded-pill px-4 mt-auto" data-bs-toggle="modal" data-bs-target="#azureModal">Link Repo</button>
+                            </div>
+                        </div>
+                        <!-- Jira -->
+                        <div class="col-md-4 d-flex">
+                            <div class="border rounded-4 p-4 w-100 d-flex flex-column align-items-center text-center bg-light justify-content-between" style="min-height: 320px;">
+                                <img src="https://cdn.worldvectorlogo.com/logos/jira-1.svg" alt="Jira" style="height:70px;max-width:100%;object-fit:contain;" class="mb-3">
+                                <h6 class="fw-bold mb-2">Jira</h6>
+                                <p class="small text-muted mb-3 flex-grow-1">Link your test cases and automation results to Jira issues and stories.</p>
+                                <button type="button" class="btn btn-outline-primary rounded-pill px-4 mt-auto" data-bs-toggle="modal" data-bs-target="#jiraModal">Configure</button>
+                            </div>
+                        </div>
+    <!-- BrowserStack Modal -->
+    <div class="modal fade" id="browserstackModal" tabindex="-1" aria-labelledby="browserstackModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="browserstackModalLabel">Connect to BrowserStack</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="bs-username" class="form-label">Username/Email</label>
+                <input type="text" class="form-control" id="bs-username" placeholder="Enter your BrowserStack username or email">
+              </div>
+              <div class="mb-3">
+                <label for="bs-accesskey" class="form-label">Access Key</label>
+                <input type="password" class="form-control" id="bs-accesskey" placeholder="Enter your BrowserStack access key">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Connect</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Azure Modal -->
+    <div class="modal fade" id="azureModal" tabindex="-1" aria-labelledby="azureModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="azureModalLabel">Link Azure Repo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="azure-org" class="form-label">Organization</label>
+                <input type="text" class="form-control" id="azure-org" placeholder="Enter your Azure organization name">
+              </div>
+              <div class="mb-3">
+                <label for="azure-project" class="form-label">Project Name</label>
+                <input type="text" class="form-control" id="azure-project" placeholder="Enter your Azure project name">
+              </div>
+              <div class="mb-3">
+                <label for="azure-pat" class="form-label">Personal Access Token</label>
+                <input type="password" class="form-control" id="azure-pat" placeholder="Enter your Azure PAT">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Link Repo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jira Modal -->
+    <div class="modal fade" id="jiraModal" tabindex="-1" aria-labelledby="jiraModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="jiraModalLabel">Configure Jira Integration</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="jira-url" class="form-label">Jira URL</label>
+                <input type="text" class="form-control" id="jira-url" placeholder="https://your-domain.atlassian.net">
+              </div>
+              <div class="mb-3">
+                <label for="jira-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="jira-email" placeholder="Enter your Jira email">
+              </div>
+              <div class="mb-3">
+                <label for="jira-api" class="form-label">API Token</label>
+                <input type="password" class="form-control" id="jira-api" placeholder="Enter your Jira API token">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Configure</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

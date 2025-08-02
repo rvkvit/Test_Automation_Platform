@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-video me-2"></i>
+                        Record New Test
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Recording Form -->
+                    <form id="recordingForm" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        
+                        <div class="mb-3">
+                            <label for="project_id" class="form-label">Project <span class="text-danger">*</span></label>
+                            <select class="form-select" id="project_id" name="project_id" required>
+                                <option value="">Select a project...</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" 
+                                        {% if request.args.get('project_id') == project.id|string %}selected{% endif %}>
+                                    {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not projects %}
+                            <div class="form-text text-warning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                No projects available. <a href="{{ url_for('projects.create_project') }}">Create one first</a>.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="script_name" class="form-label">Test Script Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="script_name" name="script_name" 
+                                   required placeholder="Enter a descriptive name for your test">
+                            <div class="form-text">
+                                Use a clear, descriptive name (e.g., "Login Flow", "Checkout Process")
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="2" placeholder="Optional description of what this test covers"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="browser_type" class="form-label">Browser</label>
+                            <select class="form-select" id="browser_type" name="browser_type">
+                                <option value="chromium" selected>Chromium</option>
+                                <option value="firefox">Firefox</option>
+                                <option value="webkit">WebKit (Safari)</option>
+                            </select>
+                            <div class="form-text">
+                                Choose the browser for recording
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   placeholder="smoke, regression, login (comma-separated)">
+                            <div class="form-text">
+                                Optional tags to categorize your test (comma-separated)
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="startBtn" 
+                                    {% if not projects %}disabled{% endif %}>
+                                <i class="fas fa-video me-2"></i>
+                                Start Recording
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Recording Status (Hidden initially) -->
+                    <div id="recordingStatus" class="d-none">
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-3" role="status">
+                                    <span class="visually-hidden">Recording...</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Recording in Progress</h6>
+                                    <p class="mb-0">Playwright browser is now open. Perform your test actions.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Recording Instructions
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="mb-3">
+                                    <li>A new browser window has opened for recording</li>
+                                    <li>Navigate to your application and perform the actions you want to test</li>
+                                    <li>Click buttons, fill forms, navigate between pages as needed</li>
+                                    <li>All your actions are being recorded automatically</li>
+                                </ul>
+                                
+                                <div class="alert alert-warning">
+                                    <strong>Important:</strong> Don't close the browser window manually. Use the Stop Recording button below.
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success" onclick="stopRecording()">
+                                        <i class="fas fa-stop me-2"></i>
+                                        Stop Recording
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="cancelRecording()">
+                                        <i class="fas fa-times me-2"></i>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recording Details -->
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <strong>Script:</strong> <span id="recordingScript"></span><br>
+                                <strong>Browser:</strong> <span id="recordingBrowser"></span><br>
+                                <strong>Started:</strong> <span id="recordingStarted"></span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Completion Status (Hidden initially) -->
+                    <div id="completionStatus" class="d-none">
+                        <div class="alert alert-success">
+                            <h6 class="mb-2">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Recording Completed Successfully!
+                            </h6>
+                            <p class="mb-3">Your test actions have been recorded and AI conversion is starting...</p>
+                            
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 100%">
+                                    Converting to Robot Framework...
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="viewScript()" id="viewScriptBtn" disabled>
+                                    <i class="fas fa-eye me-2"></i>
+                                    View Script
+                                </button>
+                                <a href="{{ url_for('recording.index') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Record Another
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        How Recording Works
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-play text-primary me-2"></i>During Recording</h6>
+                            <ul class="text-muted">
+                                <li>Browser opens with Playwright recorder</li>
+                                <li>All clicks, typing, and navigation are captured</li>
+                                <li>Generated as Python Playwright script</li>
+                                <li>Works with any web application</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-magic text-success me-2"></i>After Recording</h6>
+                            <ul class="text-muted">
+                                <li>AI converts to Robot Framework format</li>
+                                <li>Optimizes selectors for reliability</li>
+                                <li>Adds proper test structure</li>
+                                <li>Ready for execution and maintenance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/record.js') }}"></script>
+{% endblock %}

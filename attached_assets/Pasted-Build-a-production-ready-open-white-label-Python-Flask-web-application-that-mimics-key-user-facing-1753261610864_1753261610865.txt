@@ -1,0 +1,513 @@
+Build a production-ready, open, white‑label Python Flask web application that mimics key user-facing capabilities of Testim.io—recording UI actions, converting them to maintainable Robot Framework Browser Library tests, executing them with results + videos, and providing team collaboration, analytics, and artifact management. The solution must run cleanly on Replit, local developer machines (Windows + Linux), and containerized CI environments, without any visible or required Replit-specific dependencies, code paths, files, branding, or metadata in the codebase. All environment-specific behavior must be handled via configuration, runtime detection, or documentation.
+
+High-Level Capabilities
+
+Record UI Flows → Playwright Script via Playwright Codegen in user-selected browser (Chromium, Firefox, WebKit).
+
+AI Conversion → Robot Framework Browser Library .robot test scripts using Azure OpenAI.
+
+Execute Robot Tests per script or suite; capture results + video.
+
+Project & Script Management UI (Dashboard, Projects, Analytics, Team, Auth, Record UI).
+
+Artifacts & Storage Layout (see folder structure) with safe file naming & isolation per project.
+
+Team Collaboration & RBAC (Admin/Tester/Viewer roles; invitations via email).
+
+Actionable Analytics (pass/fail trends, duration, flakiness, last run, stability score).
+
+Cross‑Platform + Headless Support (Windows, Linux, and CI headless mode switches).
+
+White‑Label / No Replit Leakage: No .replit, no imports from replit modules, no comments referencing Replit, no UI branding. Docs may optionally include a short section titled "Running on Replit (Optional)" that explains how to host there without altering project code.
+
+Functional Requirements
+
+1. Recording Workflow
+
+UI Form Fields: Project Name, Test Script Name, Browser (Chromium | Firefox | WebKit), Optional Tags, Description.
+
+User Flow:
+
+User selects project (existing or create-new inline) and enters script details.
+
+Click Start Recording → server-side process launches Playwright Codegen for selected browser.
+
+Live session instructions shown (modal / panel), including keyboard shortcuts to stop.
+
+When user stops recording (UI Stop button or Codegen exit):
+
+Generated Python Playwright script captured.
+
+Stored in <ROOT>/playwright_scripts/<project>/<script_name>.py.
+
+Trigger AI Conversion Pipeline (async background job recommended).
+
+Error Handling:
+
+Validate script name (safe filesystem name, alphanumeric + underscore + dash).
+
+Auto-dedupe name collisions (_v2, _timestamp).
+
+Graceful fallback if Playwright Codegen fails; show logs.
+
+2. AI Conversion: Playwright → Robot Framework (Browser Library)
+
+Engine: Azure OpenAI (GPT-4o or configured deployment).
+
+Conversion Contract: Provide structured JSON request containing:
+
+Original Playwright Python script content.
+
+Project metadata (base URL if known, tags).
+
+Conversion instructions (below) as system guidance.
+
+Conversion Guidance Rules:
+
+Output .robot file using standard Robot Framework syntax.
+
+Import Browser library (Robot Framework Browser Library).
+
+Map Playwright actions to Browser keywords:
+
+page.goto(url) → New Browser + New Context (if not sessioned) + New Page or simplified Go To depending on chosen pattern.
+
+page.click(selector) → Click    selector.
+
+page.fill(selector, value) → Fill Text    selector    value.
+
+Assertions: Use Get Text, Get Title, Get Element States, and Should Be Equal / Should Contain as needed.
+
+Normalize selectors: Prefer data-test-id, aria-label, role-based selectors; fallback to CSS; avoid brittle XPaths where possible.
+
+Include Variables section for URLs, credentials (placeholders), and test data.
+
+Include Keywords section wrapping reusable flows (login, navigate, submit form) auto-detected by repeated selector patterns.
+
+Include [Tags] metadata at test level (e.g., smoke, regression, flaky, project name).
+
+Provide inline comments (#) describing each step for readability.
+
+Minimal Example Conversion
+Input (Python/Playwright snippet):
+
+page.goto("https://example.com")
+page.click("text=Login")
+page.fill("input[name=username]", "demo")
+page.fill("input[name=password]", "secret")
+page.click("text=Submit")
+expect(page.locator("h1")).to_have_text("Dashboard")
+
+Output (.robot using Browser Library):
+
+*** Settings ***
+Library    Browser
+
+*** Variables ***
+${BASE_URL}    https://example.com
+${USERNAME}    demo
+${PASSWORD}    secret
+
+*** Test Cases ***
+Login And Land On Dashboard
+    New Browser    chromium
+    New Context    viewport={'width':1280,'height':720}
+    New Page    ${BASE_URL}
+    Click    text=Login
+    Fill Text    input[name=username]    ${USERNAME}
+    Fill Text    input[name=password]    ${PASSWORD}
+    Click    text=Submit
+    ${header}=    Get Text    h1
+    Should Be Equal    ${header}    Dashboard
+    Close Browser
+
+Post-Conversion Flow:
+
+Save generated script: <ROOT>/robot_scripts/<project>/<script_name>.robot.
+
+Render preview in web UI with syntax-highlighted editor (editable before saving).
+
+Allow user to re-run conversion if they’ve edited the Playwright source.
+
+Show AI prompt + response (collapsible) for debugging/trust.
+
+3. Script Editing & Versioning
+
+Edits done in browser UI update file on save.
+
+Maintain optional version history (JSON metadata + timestamp; keep last N versions config-driven).
+
+Display diff between current and previous version.
+
+4. Test Execution
+
+Execution Modes:
+
+Single Script Run.
+
+Project Suite Run (all scripts in project, sequential initially; later parallelizable).
+
+Runner Implementation:
+
+Invoke Robot Framework programmatically (e.g., robot -d <output_dir> <script.robot> or via Python API robot.run_cli).
+
+Use Browser Library for UI automation; ensure Playwright browsers installed.
+
+Capture:
+
+Pass/Fail status.
+
+Log & report paths.
+
+Start/end timestamps.
+
+Duration.
+
+Video (Browser Library video capture or Playwright trace video). Store at <ROOT>/execution_videos/<project>/<script_name>.webm.
+
+Option to overwrite last video (default) OR keep history (config flag).
+
+Headless Toggle: Configurable: headless for CI; headed optional in local dev.
+
+Resource Controls: Timeout per test configurable; kill hung processes.
+
+5. Dashboard
+
+Show at-a-glance metrics:
+
+Total Projects
+
+Total Scripts
+
+Last 10 Executions (project/script/status/duration/timestamp)
+
+Pass % last 7 days
+
+Quick Actions: Record New, Run All, Invite Team
+
+6. Projects Page
+
+List all projects. For each:
+
+Project metadata (created date, owner, #scripts, last run health).
+
+Table of scripts: name, tags, last result, last duration, actions [Run | Edit | View Logs | Download Artifacts].
+
+Bulk select + Run Selected.
+
+Upload/Import .robot file (merge into project).
+
+7. Analytics Page
+
+Interactive, visual, filterable analytics (per project, global):
+
+Trend Line: Pass vs Fail over time.
+
+Duration Trend: Avg exec time.
+
+Flakiness Index: (# failures / # runs last N execs).
+
+Most Failing Selectors: Optional advanced feature—collect from logs.
+
+Export CSV.
+
+Use Chart.js (preferred) or Plotly CDN; ensure no vendor lock to Replit.
+
+8. Invite Team & RBAC
+
+Roles:
+
+Admin: Create projects, record, edit, invite, delete, run.
+
+Tester: Record, edit, run in assigned projects.
+
+Viewer: Read-only access to results & analytics.
+
+Invite Flow:
+
+Enter email(s); system sends invitation link w/ token.
+
+Recipient creates password; role assigned.
+
+Store users in SQLite (default) with option to switch to Postgres via env var.
+
+9. Authentication & Sessions
+
+Login page (email + password).
+
+Password hashing (bcrypt/argon2).
+
+Session cookie (Flask-Login or custom session mgmt).
+
+CSRF protection for forms.
+
+10. Cross-Platform & Environment Abstraction
+
+MUST RUN on:
+
+Local Windows (PowerShell / cmd) developer machine.
+
+Local Linux/macOS dev (bash/zsh) machine.
+
+Cloud containers / CI runners.
+
+Replit hosting without codebase changes.
+
+MANDATES:
+
+No from replit import ... anywhere.
+
+No .replit file required to run.
+
+No comments crediting or referencing Replit in code.
+
+No Replit-specific environment variable usage unless optional docs.
+
+Use pure Python + pip install flows.
+
+All paths OS-agnostic using pathlib.
+
+Shell commands wrapped in Python where possible.
+
+Provide PowerShell + Bash command examples in README.
+
+Runtime Environment Detection Helper: Implement a small utility that:
+
+import os, platform
+IS_WINDOWS = platform.system().lower().startswith("win")
+IS_LINUX = platform.system().lower() == "linux"
+IS_HEADLESS = os.getenv("HEADLESS", "1") == "1"
+DATA_ROOT = os.getenv("TEST_APP_ROOT", str(Path(__file__).parent))
+
+All runtime paths derive from DATA_ROOT.
+
+11. Storage & Folder Structure
+
+Top-level layout (configurable root via env var):
+
+/your_app_root/
+  main.py
+  app/
+    __init__.py
+    config.py
+    models.py
+    auth.py
+    playback.py   # Playwright recording helpers
+    conversion.py # Azure OpenAI conversion helpers
+    execution.py  # Robot Framework runner
+    analytics.py  # Data aggregation
+    emailer.py    # Invitation emails
+    utils/
+      fs.py
+      selectors.py
+      security.py
+  templates/
+    base.html
+    dashboard.html
+    projects.html
+    analytics.html
+    invite.html
+    login.html
+    record.html
+    _partials/
+      nav.html
+      flash.html
+  static/
+    css/
+    js/
+    img/
+  playwright_scripts/
+    <project>/<script>.py
+  robot_scripts/
+    <project>/<script>.robot
+  execution_videos/
+    <project>/<script>.webm
+  results/
+    <project>/<run_id>/robot_output/* (log.html, report.html, output.xml)
+  instance/
+    app.db (SQLite default)
+  tests/
+    test_routes.py
+    test_conversion.py
+    test_execution.py
+  requirements.txt
+  README.md
+  LICENSE
+  .env.example
+
+12. Configuration (.env Driven)
+
+Provide .env.example containing:
+
+FLASK_ENV=development
+SECRET_KEY=change_me
+AZURE_OPENAI_ENDPOINT=https://<your-endpoint>.openai.azure.com/
+AZURE_OPENAI_API_KEY=
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+TEST_APP_ROOT=
+HEADLESS=1
+DATABASE_URL=sqlite:///instance/app.db
+EMAIL_SENDER=
+SMTP_HOST=
+SMTP_USER=
+SMTP_PASS=
+
+App loads env w/ python-dotenv if present; otherwise fallback to system envs.
+
+13. Sample Core Code Requirements
+
+Provide working baseline code (minimal but functional) for:
+
+Flask app bootstrap (create_app pattern recommended).
+
+DB models: User, Project, TestScript, ExecutionResult, InvitationToken.
+
+Recording route → spawn Playwright Codegen (subprocess module; non-blocking thread).
+
+Stop recording → finalize file, trigger conversion.
+
+Conversion helper calling Azure OpenAI Chat Completion with structured system + user messages, receiving Robot Framework code.
+
+Save + preview Robot script.
+
+Execution route invoking Robot Framework programmatically; capture return code + logs.
+
+Store execution metadata in DB.
+
+Serve last video (if exists) via Flask route.
+
+Analytics aggregator queries DB.
+
+All code must run with Python 3.11+.
+
+14. Background Task Handling
+
+Because code may be hosted in lightweight environments, provide an abstraction layer for background jobs:
+
+Default: Python threading.Thread fire-and-forget.
+
+Optional advanced: RQ / Celery (documented; not required for base run).
+
+Ensure UI reflects async job status (pending, complete, failed).
+
+15. Security & Hardening
+
+Sanitize all user-provided names before using in filesystem paths.
+
+Enforce allowed file extensions.
+
+Prevent directory traversal.
+
+Use CSRF tokens in forms.
+
+Hash passwords (bcrypt or argon2).
+
+Never log secrets.
+
+Use role checks around record/edit/run endpoints.
+
+16. Testing & CI Readiness
+
+Include a tests/ directory with minimal pytest cases:
+
+App factory loads.
+
+Can create a project via POST.
+
+Dummy Playwright script converts (mock OpenAI) to Robot.
+
+Robot execution stub returns a pass.
+
+Provide GitHub Actions YAML snippet (commented in README) showing lint + test + headless run.
+
+17. Documentation (README.md)
+
+README must include:
+
+Project Overview
+
+Features summary bullets.
+
+Quick Start (5 commands: clone, create venv, install, init DB, run).
+
+Install Playwright Browsers (platform-agnostic):
+
+python -m playwright install --with-deps (Linux) / just install on Windows.
+
+Robot Framework Install & Verify.
+
+Set Up Azure OpenAI credentials.
+
+Create Your First Project & Record Test walkthrough w/ screenshots (placeholder paths acceptable).
+
+Run Tests Headless vs Headed.
+
+Optional: Running on Replit (emphasize no code changes; just env config).
+
+Troubleshooting (Playwright not launching, no display, permission denied, video missing).
+
+No Replit-branded code. Mention Replit only in ops notes.
+
+18. UI/UX Expectations
+
+Use Bootstrap 5.
+
+Responsive, simple dark/light toggle optional.
+
+Global nav: Dashboard | Projects | Analytics | Record | Invite Team | Logout.
+
+Flash message area for success/error.
+
+Syntax-highlighting editor for Robot scripts (e.g., CodeMirror/Monaco via CDN; degrade gracefully if offline).
+
+19. Accessibility & Internationalization (Stretch)
+
+Add ARIA labels to interactive elements.
+
+Keyboard navigation for all major actions.
+
+Language strings externalized for easy future translation.
+
+20. Deliverables Summary (What You Must Provide)
+
+Code Artifacts:
+
+main.py (or package app/ w/ factory + wsgi.py runner).
+
+All Flask routes + blueprints.
+
+HTML templates for Dashboard, Projects, Analytics, Invite Team, Login, Record.
+
+Supporting partials (nav, flash, forms).
+
+requirements.txt complete + pinned minor versions where stability matters.
+
+README.md (install, configure, run; Windows + Linux instructions; optional Replit hosting; no Replit deps).
+
+Sample Playwright Codegen integration snippet.
+
+Sample Robot execution wrapper.
+
+Azure OpenAI conversion helper (safe retries, error surfacing).
+
+Folder structure scaffolding script (create dirs if missing at startup).
+
+Data Samples:
+
+1 sample Playwright script.
+
+Corresponding converted Robot script.
+
+1 sample execution result JSON.
+
+21. Quality & Style Guidelines
+
+Use pathlib.Path for all filesystem paths.
+
+Type hints everywhere practical.
+
+Docstrings (Google style or Sphinx) at module + function level.
+
+Central logging config (INFO default, DEBUG via env var).
+
+Graceful exception handling w/ user-visible flash + logged trace.

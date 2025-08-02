@@ -1,0 +1,97 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environment variables
+.env
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# VS Code
+.vscode/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Flask instance folder
+instance/
+
+# Logs
+*.log
+debug.log
+
+# Robot Framework output
+output.xml
+log.html
+report.html
+results/
+execution_videos/
+
+# Static files
+static/js/*.js.map
+
+# Lock files
+uv.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+
+# Ignore test artifacts
+*.robot.xml
+*.robot.html
+
+# Ignore Python virtual environments
+venv/
+.venv/
+ENV/

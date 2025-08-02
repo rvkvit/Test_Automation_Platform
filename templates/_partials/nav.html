@@ -1,0 +1,73 @@
+<nav class="sidebar bg-white border-end d-flex flex-column flex-shrink-0 p-3 position-fixed min-vh-100" style="width: 220px; z-index: 1040;">
+    <a href="{{ url_for('main.dashboard') }}" class="d-flex align-items-center mb-4 text-decoration-none">
+        <i class="fas fa-robot fa-2x text-primary me-2"></i>
+        <span class="fs-5 fw-bold text-dark">Test Automation</span>
+    </a>
+    {% if current_user.is_authenticated %}
+    <ul class="nav nav-pills flex-column mb-auto gap-1">
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+        </li>
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('projects.') %}active{% endif %}" href="{{ url_for('projects.list_projects') }}">
+                <i class="fas fa-folder me-2"></i>Projects
+            </a>
+        </li>
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('analytics.') %}active{% endif %}" href="{{ url_for('analytics.dashboard') }}">
+                <i class="fas fa-chart-line me-2"></i>Analytics
+            </a>
+        </li>
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('recording.') %}active{% endif %}" href="{{ url_for('recording.index') }}">
+                <i class="fas fa-video me-2"></i>Record
+            </a>
+        </li>
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('execution.') %}active{% endif %}" href="{{ url_for('execution.list_results') }}">
+                <i class="fas fa-play me-2"></i>Executions
+            </a>
+        </li>
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('integrations') %}active{% endif %}" href="{{ url_for('integrations.index') }}">
+                <i class="fas fa-plug me-2"></i>Integrations
+            </a>
+        </li>
+        {% if current_user.has_role('Admin') or current_user.has_role('Tester') %}
+        <li>
+            <a class="nav-link d-flex align-items-center {% if request.endpoint.startswith('team.') %}active{% endif %}" href="{{ url_for('team.dashboard') }}">
+                <i class="fas fa-users me-2"></i>Team
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+    <hr>
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle fa-lg me-2"></i>
+            <strong>{{ current_user.username }}</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+<li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+<li><a class="dropdown-item" href="{{ url_for('main.system_info') }}"><i class="fas fa-info-circle me-2"></i>System Info</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+        </ul>
+    </div>
+    {% else %}
+    <ul class="nav nav-pills flex-column mb-auto gap-1">
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center {% if request.endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}">
+                <i class="fas fa-sign-in-alt me-2"></i>Login
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center {% if request.endpoint == 'auth.register' %}active{% endif %}" href="{{ url_for('auth.register') }}">
+                <i class="fas fa-user-plus me-2"></i>Register
+            </a>
+        </li>
+    </ul>
+    {% endif %}
+</nav>

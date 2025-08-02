@@ -1,0 +1,62 @@
+*** Settings ***
+Library    Browser
+
+*** Variables ***
+${BASE_URL}    https://sit1asiointi.lahitapiola.fi/
+${BROWSER_TYPE}    chromium
+
+*** Test Cases ***
+Test Release Investment
+    [Setup]    Open Browser And New Context
+    Navigate To URL    ${BASE_URL}
+    Click Release Investment Options
+    Save Changes
+    Accept All Cookies
+    Navigate To OP Link
+    Authenticate
+    Confirm
+    Continue
+    Click SSN Field
+    Click SSN Error
+    [Teardown]    Close Context
+
+*** Keywords ***
+Open Browser And New Context
+    New Browser    ${BROWSER_TYPE}    headless=False
+    New Context    recordVideo={'dir': './execution_videos/Test_Release_Investment'}
+
+Navigate To URL
+    [Arguments]    ${url}
+    New Page
+    Go To    ${url}
+
+Click Release Investment Options
+    Click    label:has-text("RELEASE_INVESTMENT_01") >> div >> nth=3
+    Click    label:has-text("RELEASE_INVESTMENT_01") >> div >> nth=4
+
+Save Changes
+    Click    role=button[name="Save"]
+
+Accept All Cookies
+    Click    role=button[name="Hyväksy kaikki"]
+
+Navigate To OP Link
+    Click    role=link[name="OP"]
+
+Authenticate
+    Click    role=button[name="Tunnistaudu"]
+
+Confirm
+    Click    role=button[name="Vahvista"]
+
+Continue
+    Click    role=button[name="jatkaa"]
+
+Click SSN Field
+    Click    text="Sosiaaliturvatunnuskenttä on"
+
+Click SSN Error
+    Click    text="The ssn you provided is not"
+
+Close Context
+    Close Context

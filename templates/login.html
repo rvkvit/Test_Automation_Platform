@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+<style>
+    body.login-bg {
+        background: linear-gradient(120deg, #f8fafc 0%, #e9ecef 100%);
+        min-height: 100vh;
+        font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+        overflow-x: hidden;
+    }
+    .login-left {
+        background: transparent;
+        color: #232526;
+        border-radius: 2.5rem 0 0 2.5rem;
+        position: relative;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+    }
+    .ai-illustration {
+        width: 90%;
+        max-width: 400px;
+        margin-bottom: 2.5rem;
+        filter: drop-shadow(0 8px 32px rgba(0,0,0,0.10));
+        animation: float 3.5s ease-in-out infinite;
+        z-index: 1;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-18px); }
+    }
+    .login-buzzwords {
+        position: relative;
+        width: 100%;
+        text-align: center;
+        font-size: 1.2rem;
+        opacity: 0.92;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        z-index: 2;
+        color: #232526;
+        text-shadow: 0 2px 8px #f8fafc55;
+    }
+    .login-card {
+        border-radius: 2.5rem;
+        box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.08);
+        background: rgba(255,255,255,0.98);
+        backdrop-filter: blur(12px) saturate(1.2);
+        border: 1.5px solid #f1f3f4;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        z-index: 2;
+        transition: box-shadow 0.3s;
+    }
+    .login-card:hover {
+        box-shadow: 0 16px 64px 0 rgba(38, 208, 206, 0.10);
+    }
+    .login-card input:focus {
+        border-color: #26d0ce;
+        box-shadow: 0 0 0 0.2rem #26d0ce22;
+    }
+    .login-title {
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #232526;
+    }
+    .login-subtitle {
+        color: #555;
+        font-size: 1.08rem;
+        font-weight: 500;
+    }
+    @media (max-width: 991px) {
+        .login-left { border-radius: 2.5rem 2.5rem 0 0; min-height: 320px; }
+        .login-card { border-radius: 0 0 2.5rem 2.5rem; }
+    }
+</style>
+<div class="container-fluid px-0">
+    <div class="row min-vh-100 g-0 align-items-center justify-content-center login-bg">
+        <!-- Left: Illustration & Buzzwords -->
+        <div class="col-lg-6 d-flex flex-column justify-content-center align-items-center login-left position-relative overflow-hidden">
+            <img id="ai-illustration" src="{{ url_for('static', filename='images/Robot.png') }}" alt="Robot" class="ai-illustration position-relative">
+            <div class="login-buzzwords position-relative">
+                <span id="buzzword-text">AI-Powered Test Generation</span>
+            </div>
+        </div>
+        <!-- Right: Login Card -->
+        <div class="col-lg-6 d-flex flex-column justify-content-center align-items-center py-5">
+            <div class="card login-card shadow-lg p-4 w-100" style="max-width: 420px;">
+                <div class="text-center mb-4">
+                    <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title login-title">Sign In</h3>
+                    <p class="login-subtitle mb-0">Welcome to the Future of Test Automation</p>
+                </div>
+                <form method="POST">
+                    {{ form.csrf_token }}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ request.form.email or '' }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                        <label class="form-check-label" for="remember_me">
+                            Remember me
+                        </label>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+                <hr class="my-4">
+                <div class="text-center">
+                    <p class="mb-0">Don't have an account?</p>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i>
+                        Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Add login-bg class to body for this page only
+    document.body.classList.add('login-bg');
+
+    // Buzzword carousel animation with fade effect
+    document.addEventListener('DOMContentLoaded', function() {
+        const buzzwords = [
+            'AI-Powered Test Generation',
+            'Automatic Test Script Recorder',
+            'Robot Framework & Playwright',
+            'Visual Regression Testing',
+            'Cloud Execution',
+            'Codeless Automation',
+            'Smart Test Analytics',
+            'Seamless CI/CD Integration'
+        ];
+        let idx = 0;
+        const el = document.getElementById('buzzword-text');
+        function showNext() {
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.textContent = buzzwords[idx];
+                el.style.opacity = 1;
+                idx = (idx + 1) % buzzwords.length;
+            }, 350);
+        }
+        setInterval(showNext, 2000);
+        // Initial
+        el.textContent = buzzwords[0];
+        el.style.transition = 'opacity 0.35s';
+    });
+</script>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

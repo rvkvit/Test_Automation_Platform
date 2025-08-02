@@ -1,0 +1,130 @@
+pageLoading:  undefined
+LOCATOR_CAPTURE:{"data-testid":null,"id":"","class":"","role":null,"name":null,"text":""}
+LOCATOR_CAPTURE:{"data-testid":null,"id":"","class":"primary hydrated","role":null,"name":null,"text":"Save"}
+
+IFRAME-RESIZER
+
+Iframe-Resizer 5 is now available via the following two packages:
+
+ * @iframe-resizer/parent
+ * @iframe-resizer/child
+
+Additionally their are also new versions of iframe-resizer for React, Vue, and jQuery.
+
+Version 5 of iframe-resizer has been extensively rewritten to use modern browser APIs, which has enabled significantly better performance and greater accuracy in the detection of content resizing events.
+
+Please see https://iframe-resizer.com/upgrade for more details.
+
+LOCATOR_CAPTURE:{"data-testid":null,"id":"","class":"portal-link","role":null,"name":null,"text":"OP"}
+fullpage.js> loginFinishedCallbackfunction(){}
+fullpage.js> useDefaultView: true
+fullpage.js> loginServletcontainer [object Object]
+fullpage.js> Variables injected
+cookie op.ftn.lang value was ''
+fullpage.js> language is: en-US
+Cookiedomain: .op.fi
+fullpage.js> Initializing login with locale fi
+loginServletPlugin.js> initializeLogin with locale 'fi'
+eaiPost from https://saml-idp.test.op.fi/authentication/customertestui/FullPageLogin?&signedRequest=eyJ0eXAiOiJKV1QiLCJraWQiOiI4dU1CT1JNWWtYU3FuZjdKTVFYbk85a0U3YTByUVMxU1pVeGtsckFYUzFJIiwiYWxnIjoiUlMyNTYifQ.eyJIT1NUTkFNRSI6InNhbWwtaWRwLnRlc3Qub3AuZmkiLCJTU09SZXF1ZXN0SWQiOiJfNzllNWQ5MmUzYWJiOWI0OGRlODA0NWUxMjY5NjIzZjgzMzZmNzg1YTJkMWY1YjdjMzNmNWYwZjkyNTdlYzRjOSIsImxvY2FsZSI6ImZpIiwiUmVsYXlTdGF0ZSI6Ik5VaTVOd2dmQUxHVy05VFFfX3Q4TUppb1V2ZjNsRTRkME53ZUJkX1Z5aDBXam13a2dFOG1oYk1zZnJiZWZWcEhQTUlPVkVFbGRhTSIsIlBhcnRuZXJJZCI6Imh0dHBzOi8vb3AtaWQuZnRuLnByZXByb2Quc2lnbmljYXQuY29tIiwiUmVkaXJlY3RVcmwiOiJodHRwczovL3NhbWwtaWRwLnRlc3Qub3AuZmkvRklNL3Nwcy9hdXRoIiwianRpIjoiQ1BaZVQzd3NGSSIsImF1ZCI6IkxSUiIsIm5iZiI6MTc1MzYzOTQ5OCwic3ViIjoidW5hdXRoZW50aWNhdGVkIiwiaWF0IjoxNzUzNjM5Nzk4LCJleHAiOjE3NTM2NDAwOTgsImlzcyI6InNhbWwtaWRwLnRlc3Qub3AuZmkifQ.znyoTfSU4zRZaorszj08ZR58gBpttqf0lbQ-8hiOnXyhIW2gQ1ZY-BLUXB4_dBmCXSvqlsYHrar8XCXDJMwhCfHZSm2QXC-aWUfWXEHcPSij2BEazSnfQiyfCY-maxMGEEmhurCXgLqLHQESWfA5P6XJo0rSlF3yWkW2OfBEyI-kiAJauLxj21Q_7VYR-QvvFXFRcKpm2lFimTp4oLFfBpj8Twrmfoe2jqRnTOhYZeh1kdq2PwHmOmV5e8V3PknxkAEw88T7gWDgHlMq9TpzGTvqdoRhiu3q6ilEKIasxfv5jPtnVXgBnkXUOMVsHHAEZ1KVWrPMMSWTD5BHu4QNqw to postEndpointUrl=/authentication/customertestui/rest/initializeLoginServlet/fi
+fullpage.js>End
+Failed to load resource: the server responded with a status of 404 (Not Found)
+loginServletPlugin.js> renderTemplateContainer 'loginServletPlugin-LoginTemplate.hbs' to container '[object Object]' {
+    "krLoginLocalizations": {
+        "errorLocalizations": {},
+        "localizationsFieldText": {
+            "cancel_button": "Keskeytä",
+            "login_button": "Tunnistaudu",
+            "login_username": "OPn käyttäjätunnus",
+            "timeout_header": "timeout_header",
+            "popup_cancel_verification_header": "Haluatko varmasti keskeyttää tunnistautumisen?",
+            "login_password_validation": "Tarkista salasana",
+            "op_as_service_header": "OP Tunnistuspalvelu",
+            "login_password": "OPn salasana",
+            "login_header_message": "Op.fi-palvelu käyttää suojattuja yhteyksiä ja sen käyttö on täysin turvallista. Saat palvelun käyttöösi osuuspankista.",
+            "login_username_validation": "Tarkista käyttäjätunnus",
+            "popup_cancel_verification_accept": "Kyllä",
+            "login_header": "Tunnistaudu palveluun",
+            "popup_cancel_verification_cancel": "Peruuta"
+        }
+    },
+    "notificationLocalizations": {},
+    "errorCode": "",
+    "redirectUrl": "https://saml-idp.test.op.fi/FIM/sps/auth",
+    "partnerId": "https://op-id.ftn.preprod.signicat.com",
+    "timeout": 1200000,
+    "merchantCheckSkipable": true,
+    "eventRegistrySkipable": true
+}
+Timeout called with 1200000
+loginServletPlugin.js> startRendering then
+LOCATOR_CAPTURE:{"data-testid":null,"id":"login_button","class":"opux-btn opux-btn-primary","role":null,"name":null,"text":"Tunnistaudu"}
+language is 'fi'
+loginServletPlugin.js> eaiKRlogin 
+eaiPost from https://saml-idp.test.op.fi/authentication/customertestui/FullPageLogin?&signedRequest=eyJ0eXAiOiJKV1QiLCJraWQiOiI4dU1CT1JNWWtYU3FuZjdKTVFYbk85a0U3YTByUVMxU1pVeGtsckFYUzFJIiwiYWxnIjoiUlMyNTYifQ.eyJIT1NUTkFNRSI6InNhbWwtaWRwLnRlc3Qub3AuZmkiLCJTU09SZXF1ZXN0SWQiOiJfNzllNWQ5MmUzYWJiOWI0OGRlODA0NWUxMjY5NjIzZjgzMzZmNzg1YTJkMWY1YjdjMzNmNWYwZjkyNTdlYzRjOSIsImxvY2FsZSI6ImZpIiwiUmVsYXlTdGF0ZSI6Ik5VaTVOd2dmQUxHVy05VFFfX3Q4TUppb1V2ZjNsRTRkME53ZUJkX1Z5aDBXam13a2dFOG1oYk1zZnJiZWZWcEhQTUlPVkVFbGRhTSIsIlBhcnRuZXJJZCI6Imh0dHBzOi8vb3AtaWQuZnRuLnByZXByb2Quc2lnbmljYXQuY29tIiwiUmVkaXJlY3RVcmwiOiJodHRwczovL3NhbWwtaWRwLnRlc3Qub3AuZmkvRklNL3Nwcy9hdXRoIiwianRpIjoiQ1BaZVQzd3NGSSIsImF1ZCI6IkxSUiIsIm5iZiI6MTc1MzYzOTQ5OCwic3ViIjoidW5hdXRoZW50aWNhdGVkIiwiaWF0IjoxNzUzNjM5Nzk4LCJleHAiOjE3NTM2NDAwOTgsImlzcyI6InNhbWwtaWRwLnRlc3Qub3AuZmkifQ.znyoTfSU4zRZaorszj08ZR58gBpttqf0lbQ-8hiOnXyhIW2gQ1ZY-BLUXB4_dBmCXSvqlsYHrar8XCXDJMwhCfHZSm2QXC-aWUfWXEHcPSij2BEazSnfQiyfCY-maxMGEEmhurCXgLqLHQESWfA5P6XJo0rSlF3yWkW2OfBEyI-kiAJauLxj21Q_7VYR-QvvFXFRcKpm2lFimTp4oLFfBpj8Twrmfoe2jqRnTOhYZeh1kdq2PwHmOmV5e8V3PknxkAEw88T7gWDgHlMq9TpzGTvqdoRhiu3q6ilEKIasxfv5jPtnVXgBnkXUOMVsHHAEZ1KVWrPMMSWTD5BHu4QNqw to postEndpointUrl=/authentication/EaiKrMock/rest/login
+EAILogin succesful. Do stepup next {
+    "authMethod": "VPT",
+    "etk_klo": "11:28:00",
+    "etk_pvm": "2017-07-20",
+    "sukunimi_kayt": "Tunnistus V�in�",
+    "avl_jaljella": "292",
+    "postituskd_avll": "00"
+}
+eaiGet from https://saml-idp.test.op.fi/authentication/customertestui/FullPageLogin?&signedRequest=eyJ0eXAiOiJKV1QiLCJraWQiOiI4dU1CT1JNWWtYU3FuZjdKTVFYbk85a0U3YTByUVMxU1pVeGtsckFYUzFJIiwiYWxnIjoiUlMyNTYifQ.eyJIT1NUTkFNRSI6InNhbWwtaWRwLnRlc3Qub3AuZmkiLCJTU09SZXF1ZXN0SWQiOiJfNzllNWQ5MmUzYWJiOWI0OGRlODA0NWUxMjY5NjIzZjgzMzZmNzg1YTJkMWY1YjdjMzNmNWYwZjkyNTdlYzRjOSIsImxvY2FsZSI6ImZpIiwiUmVsYXlTdGF0ZSI6Ik5VaTVOd2dmQUxHVy05VFFfX3Q4TUppb1V2ZjNsRTRkME53ZUJkX1Z5aDBXam13a2dFOG1oYk1zZnJiZWZWcEhQTUlPVkVFbGRhTSIsIlBhcnRuZXJJZCI6Imh0dHBzOi8vb3AtaWQuZnRuLnByZXByb2Quc2lnbmljYXQuY29tIiwiUmVkaXJlY3RVcmwiOiJodHRwczovL3NhbWwtaWRwLnRlc3Qub3AuZmkvRklNL3Nwcy9hdXRoIiwianRpIjoiQ1BaZVQzd3NGSSIsImF1ZCI6IkxSUiIsIm5iZiI6MTc1MzYzOTQ5OCwic3ViIjoidW5hdXRoZW50aWNhdGVkIiwiaWF0IjoxNzUzNjM5Nzk4LCJleHAiOjE3NTM2NDAwOTgsImlzcyI6InNhbWwtaWRwLnRlc3Qub3AuZmkifQ.znyoTfSU4zRZaorszj08ZR58gBpttqf0lbQ-8hiOnXyhIW2gQ1ZY-BLUXB4_dBmCXSvqlsYHrar8XCXDJMwhCfHZSm2QXC-aWUfWXEHcPSij2BEazSnfQiyfCY-maxMGEEmhurCXgLqLHQESWfA5P6XJo0rSlF3yWkW2OfBEyI-kiAJauLxj21Q_7VYR-QvvFXFRcKpm2lFimTp4oLFfBpj8Twrmfoe2jqRnTOhYZeh1kdq2PwHmOmV5e8V3PknxkAEw88T7gWDgHlMq9TpzGTvqdoRhiu3q6ilEKIasxfv5jPtnVXgBnkXUOMVsHHAEZ1KVWrPMMSWTD5BHu4QNqw to getEndpointUrl=/authentication/customertestui/rest/model/keycode/fi with errorCode undefined
+loginServletPlugin.js> Stepup response: {
+    "krLoginLocalizations": {
+        "errorLocalizations": {},
+        "localizationsFieldText": {
+            "cancel_button": "Keskeytä",
+            "popup_cancel_verification_header": "Haluatko varmasti keskeyttää tunnistautumisen?",
+            "op_as_service_header": "OP Tunnistuspalvelu",
+            "login_keycode": "Avainluku",
+            "login_keycode_submit": "Vahvista",
+            "challenge_code": "1234",
+            "login_keycode_validation": "Tarkista avainluku",
+            "keycode_left_number": "292",
+            "challenge_text": "Vahvista vielä henkilöllisyytesi",
+            "popup_cancel_verification_accept": "Kyllä",
+            "popup_cancel_verification_cancel": "Peruuta",
+            "stepup_keycodes_left": "Avainlukuja jäljellä 292 kpl."
+        }
+    },
+    "errorCode": "",
+    "timeout": 0,
+    "merchantCheckSkipable": true,
+    "eventRegistrySkipable": true
+}
+/model/keycode response keycodeChallenge 1234 and keycodeLeft 292
+loginServletPlugin.js> renderTemplateContainer 'loginServletPlugin-KeycodeTemplate.hbs' to container '[object Object]' {
+    "krLoginLocalizations": {
+        "errorLocalizations": {},
+        "localizationsFieldText": {
+            "cancel_button": "Keskeytä",
+            "popup_cancel_verification_header": "Haluatko varmasti keskeyttää tunnistautumisen?",
+            "op_as_service_header": "OP Tunnistuspalvelu",
+            "login_keycode": "Avainluku",
+            "login_keycode_submit": "Vahvista",
+            "challenge_code": "1234",
+            "login_keycode_validation": "Tarkista avainluku",
+            "keycode_left_number": "292",
+            "challenge_text": "Vahvista vielä henkilöllisyytesi",
+            "popup_cancel_verification_accept": "Kyllä",
+            "popup_cancel_verification_cancel": "Peruuta",
+            "stepup_keycodes_left": "Avainlukuja jäljellä 292 kpl."
+        }
+    },
+    "errorCode": "",
+    "timeout": 0,
+    "merchantCheckSkipable": true,
+    "eventRegistrySkipable": true
+}
+LOCATOR_CAPTURE:{"data-testid":null,"id":"stepup-login","class":"opux-btn opux-btn-finish","role":null,"name":null,"text":"Vahvista"}
+language is 'fi'
+loginServletPlugin.js> eaiKRChallenge 
+eaiPost from https://saml-idp.test.op.fi/authentication/customertestui/FullPageLogin?&signedRequest=eyJ0eXAiOiJKV1QiLCJraWQiOiI4dU1CT1JNWWtYU3FuZjdKTVFYbk85a0U3YTByUVMxU1pVeGtsckFYUzFJIiwiYWxnIjoiUlMyNTYifQ.eyJIT1NUTkFNRSI6InNhbWwtaWRwLnRlc3Qub3AuZmkiLCJTU09SZXF1ZXN0SWQiOiJfNzllNWQ5MmUzYWJiOWI0OGRlODA0NWUxMjY5NjIzZjgzMzZmNzg1YTJkMWY1YjdjMzNmNWYwZjkyNTdlYzRjOSIsImxvY2FsZSI6ImZpIiwiUmVsYXlTdGF0ZSI6Ik5VaTVOd2dmQUxHVy05VFFfX3Q4TUppb1V2ZjNsRTRkME53ZUJkX1Z5aDBXam13a2dFOG1oYk1zZnJiZWZWcEhQTUlPVkVFbGRhTSIsIlBhcnRuZXJJZCI6Imh0dHBzOi8vb3AtaWQuZnRuLnByZXByb2Quc2lnbmljYXQuY29tIiwiUmVkaXJlY3RVcmwiOiJodHRwczovL3NhbWwtaWRwLnRlc3Qub3AuZmkvRklNL3Nwcy9hdXRoIiwianRpIjoiQ1BaZVQzd3NGSSIsImF1ZCI6IkxSUiIsIm5iZiI6MTc1MzYzOTQ5OCwic3ViIjoidW5hdXRoZW50aWNhdGVkIiwiaWF0IjoxNzUzNjM5Nzk4LCJleHAiOjE3NTM2NDAwOTgsImlzcyI6InNhbWwtaWRwLnRlc3Qub3AuZmkifQ.znyoTfSU4zRZaorszj08ZR58gBpttqf0lbQ-8hiOnXyhIW2gQ1ZY-BLUXB4_dBmCXSvqlsYHrar8XCXDJMwhCfHZSm2QXC-aWUfWXEHcPSij2BEazSnfQiyfCY-maxMGEEmhurCXgLqLHQESWfA5P6XJo0rSlF3yWkW2OfBEyI-kiAJauLxj21Q_7VYR-QvvFXFRcKpm2lFimTp4oLFfBpj8Twrmfoe2jqRnTOhYZeh1kdq2PwHmOmV5e8V3PknxkAEw88T7gWDgHlMq9TpzGTvqdoRhiu3q6ilEKIasxfv5jPtnVXgBnkXUOMVsHHAEZ1KVWrPMMSWTD5BHu4QNqw to postEndpointUrl=/authentication/EaiKrMock/rest/authenticate
+EAI Stepup succesful. Redirect to URL.
+Unrecognized Content-Security-Policy directive 'navigate-to'.
+Failed to load resource: the server responded with a status of 404 ()
+LOCATOR_CAPTURE:{"data-testid":null,"id":"ssn","class":"textInput","role":null,"name":null,"text":""}
+Pattern attribute value ^([0-9]){6}([A-F]|[U-Y]|[-]|[+]){1}([a-zA-Z0-9]){4}$ is not a valid regular expression: Uncaught SyntaxError: Invalid regular expression: /^([0-9]){6}([A-F]|[U-Y]|[-]|[+]){1}([a-zA-Z0-9]){4}$/v: Invalid character in character class
+LOCATOR_CAPTURE:{"data-testid":null,"id":"","class":"panel panel-default","role":null,"name":null,"text":"Anna seuraavat tiedot.\n    \n    \n        Salasanan antamisen kentät eivät täsmää. Kirjoita sama salasana molempiin kenttiin ja yritä uudelleen.\n        Pakollinen kenttä puuttuu. Täytä kaikki pakolliset kentät ja yritä uudelleen.\n        Sosiaaliturvatunnuskenttä on täytetty väärin. Tarkista syöttämäsi tiedot ja yritä uudelleen\n        \n        \n            \n                SosiaaliturvatunnusMikä tämä on?\n            \n        \n        \n            jatkaa"}
+LOCATOR_CAPTURE:{"data-testid":null,"id":"ssn","class":"textInput","role":null,"name":null,"text":""}

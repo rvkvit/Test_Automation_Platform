@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Execution Result #{{ execution.id }}</h2>
+<p>Status: {{ execution.status.value }}</p>
+<p>Started: {{ execution.started_at }}</p>
+<p>Completed: {{ execution.completed_at }}</p>
+<p>Duration: {{ execution.duration_seconds }} seconds</p>
+{% if log_content %}
+  <h3>Log</h3>
+  <pre>{{ log_content }}</pre>
+{% endif %}
+{% if report_content %}
+  <h3>Report</h3>
+  <pre>{{ report_content }}</pre>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        User Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Profile Information -->
+                            <h5>Profile Information</h5>
+                            <form method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="action" value="update_profile">
+                                
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ current_user.username }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ current_user.email }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Role</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ current_user.role.name if current_user.role else 'User' }}" 
+                                           readonly>
+                                    <div class="form-text">Contact an administrator to change your role</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Member Since</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ current_user.created_at.strftime('%B %d, %Y') if current_user.created_at else 'Unknown' }}" 
+                                           readonly>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Update Profile
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <!-- Change Password -->
+                            <h5>Change Password</h5>
+                            <form method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="action" value="change_password">
+                                
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="current_password" 
+                                           name="current_password" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="new_password" 
+                                           name="new_password" required minlength="8">
+                                    <div class="form-text">
+                                        At least 8 characters with uppercase, lowercase, number, and special character
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirm_new_password" 
+                                           name="confirm_password" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-key me-1"></i>Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Statistics -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Account Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h4>{{ current_user.projects|length }}</h4>
+                                    <p class="mb-0">Projects Owned</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h4>{{ current_user.created_scripts|length }}</h4>
+                                    <p class="mb-0">Scripts Created</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h4>{{ current_user.project_members|length }}</h4>
+                                    <p class="mb-0">Project Memberships</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h4>{{ current_user.last_login.strftime('%m/%d') if current_user.last_login else 'Never' }}</h4>
+                                    <p class="mb-0">Last Login</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.getElementById('confirm_new_password').addEventListener('input', function() {
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = this.value;
+    
+    if (newPassword !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Script: {{ script.name }}
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('projects.script_detail', id=project.id, script_id=script.id) }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Script
+                    </a>
+                    {% if script.conversion_status == 'completed' %}
+                    <button type="button" class="btn btn-success" id="runTestBtn" onclick="runScript()">
+                        <i class="fas fa-play me-1"></i>Run Test
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script Metadata -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Script Metadata
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="update_metadata">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Script Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ script.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="2">{{ script.description or '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   value="{{ script.tags or '' }}" 
+                                   placeholder="smoke, regression, login (comma-separated)">
+                            <div class="form-text">Comma-separated tags for categorization</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Metadata
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Script Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ script.execution_results|length }}</h4>
+                                <small class="text-muted">Total Runs</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            {% set passed_runs = script.execution_results|selectattr('status.value', 'equalto', 'passed')|list|length %}
+                            {% set total_runs = script.execution_results|length %}
+                            {% set pass_rate = (passed_runs / total_runs * 100)|round(1) if total_runs > 0 else 0 %}
+                            <h4 class="text-success">{{ pass_rate }}%</h4>
+                            <small class="text-muted">Pass Rate</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Conversion Status:</span>
+                            <span class="badge bg-{{ 'success' if script.conversion_status == 'completed' else 'warning' if script.conversion_status == 'processing' else 'danger' if script.conversion_status == 'failed' else 'secondary' }}">
+                                {{ script.conversion_status.title() }}
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Browser:</span>
+                            <span class="badge bg-info">{{ script.browser_type or 'chromium' }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Created:</span>
+                            <small class="text-muted">{{ script.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script Content Editor -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>
+                        Robot Framework Script
+                    </h5>
+                    <!-- Formatter and Validate Syntax buttons removed -->
+                </div>
+                <div class="card-body p-0">
+                    <form method="POST" id="contentForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="update_content">
+                        
+                        <div id="editor-container">
+                            <textarea id="robot-editor" name="robot_content" 
+                                      style="width: 100%; height: 600px; font-family: 'Courier New', monospace;">{{ robot_content | e | replace('\r\n', '\n') | replace('\r', '\n') }}</textarea>
+                        </div>
+                        
+                        <div class="p-3 border-top bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Save Changes
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="resetContent()">
+                                        <i class="fas fa-undo me-1"></i>Reset
+                                    </button>
+                                </div>
+                                
+                                <div class="text-muted">
+                                    <small>
+                                        <i class="fas fa-keyboard me-1"></i>
+                                        Ctrl+S to save | Ctrl+Z to undo
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Panel -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Robot Framework Quick Reference
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Common Keywords</h6>
+                            <div class="text-muted small">
+                                <code>New Browser</code> - Create browser instance<br>
+                                <code>New Page</code> - Open new page<br>
+                                <code>Go To</code> - Navigate to URL<br>
+                                <code>Click</code> - Click element<br>
+                                <code>Fill Text</code> - Fill input field<br>
+                                <code>Get Text</code> - Get element text<br>
+                                <code>Should Be Equal</code> - Assert equality
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Selectors</h6>
+                            <div class="text-muted small">
+                                <code>id=myid</code> - By ID<br>
+                                <code>text=Login</code> - By text content<br>
+                                <code>[data-testid=submit]</code> - By test ID<br>
+                                <code>.class-name</code> - By CSS class<br>
+                                <code>[aria-label="Close"]</code> - By ARIA label<br>
+                                <code>button >> text=Save</code> - Chained selectors
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Best Practices</h6>
+                            <div class="text-muted small">
+                                • Use data-testid when possible<br>
+                                • Prefer text content over CSS selectors<br>
+                                • Add descriptive comments<br>
+                                • Use variables for test data<br>
+                                • Create reusable keywords<br>
+                                • Handle waits properly
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let editor;
+let originalContent = `{{ robot_content|e }}`;
+let csrfToken = '{{ csrf_token }}';
+
+// Initialize CodeMirror editor
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('robot-editor');
+    
+    editor = CodeMirror.fromTextArea(textarea, {
+        mode: 'robot',
+        theme: 'material-darker',
+        lineNumbers: true,
+        lineWrapping: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: false,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        extraKeys: {
+            "Ctrl-S": function(cm) {
+                document.getElementById('contentForm').submit();
+            },
+            "Ctrl-/": "toggleComment",
+            "F11": function(cm) {
+                cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+            },
+            "Esc": function(cm) {
+                if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+            }
+        }
+    });
+    
+    // Adjust editor height
+    editor.setSize(null, '600px');
+    
+    // Formatter and Validate Syntax functions removed
+
+    // Auto-save on change (debounced)
+    let saveTimeout;
+    editor.on('change', function() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(function() {
+            // Auto-save indication could go here
+        }, 2000);
+    });
+});
+
+function formatCode() {
+    if (typeof editor === 'undefined' || !editor) {
+        showAlert('danger', 'Editor is not ready. Please reload the page.');
+        return;
+    }
+    // Basic Robot Framework formatting
+    let content = editor.getValue();
+    // Normalize line endings and remove trailing whitespace
+    content = content.replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, '');
+    // Ensure proper spacing around sections
+    content = content.replace(/^\*\*\* (.+) \*\*\*$/gm, '\n*** $1 ***\n');
+    editor.setValue(content);
+    showAlert('success', 'Code formatted successfully');
+}
+
+function validateSyntax() {
+    if (typeof editor === 'undefined' || !editor) {
+        showAlert('danger', 'Editor is not ready. Please reload the page.');
+        return;
+    }
+    const content = editor.getValue();
+    // Basic Robot Framework syntax validation
+    const errors = [];
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        // Check for common syntax issues
+        if (trimmed.startsWith('***') && !trimmed.endsWith('***')) {
+            errors.push(`Line ${i + 1}: Section header should end with ***`);
+        }
+        // Check for proper indentation in test cases and keywords
+        const leadingSpaces = line.search(/\S/);
+        if (
+            trimmed &&
+            !trimmed.startsWith('***') &&
+            !trimmed.startsWith('#') &&
+            leadingSpaces !== -1 &&
+            leadingSpaces > 0 &&
+            leadingSpaces % 4 !== 0
+        ) {
+            errors.push(`Line ${i + 1}: Inconsistent indentation (should be multiple of 4 spaces)`);
+        }
+    }
+    
+    if (errors.length === 0) {
+        showAlert('success', 'Syntax validation passed');
+    } else {
+        showAlert('warning', `Syntax issues found:\n${errors.slice(0, 5).join('\n')}`);
+    }
+}
+
+function resetContent() {
+    if (confirm('Are you sure you want to reset all changes?')) {
+        editor.setValue(originalContent);
+        showAlert('info', 'Content reset to original version');
+    }
+}
+
+function runScript() {
+    const runBtn = document.getElementById('runTestBtn');
+    // ...existing runScript logic (if any) should go here...
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('contentForm').submit();
+    }
+});
+</script>
+{% endblock %}

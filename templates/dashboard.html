@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('recording.index') }}" class="btn btn-primary">
+                        <i class="fas fa-video me-1"></i>Record New Test
+                    </a>
+                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>New Project
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ metrics.total_projects }}</h3>
+                            <p class="mb-0">Total Projects</p>
+                        </div>
+                        <i class="fas fa-folder fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ metrics.total_scripts }}</h3>
+                            <p class="mb-0">Test Scripts</p>
+                        </div>
+                        <i class="fas fa-file-code fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ metrics.pass_rate_7_days }}%</h3>
+                            <p class="mb-0">Pass Rate (7 days)</p>
+                        </div>
+                        <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ metrics.recent_executions|length }}</h3>
+                            <p class="mb-0">Recent Runs</p>
+                        </div>
+                        <i class="fas fa-play fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Executions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Test Executions
+                    </h5>
+                    <a href="{{ url_for('execution.list_results') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if metrics.recent_executions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Script</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>Started</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for execution in metrics.recent_executions %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-folder me-1"></i>
+                                        {{ execution.project_name }}
+                                    </td>
+                                    <td>
+                                        {% if execution.is_suite %}
+                                            <i class="fas fa-list me-1"></i>
+                                            <em>Suite Run</em>
+                                        {% else %}
+                                            <i class="fas fa-file-code me-1"></i>
+                                            {{ execution.script_name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if execution.status == 'passed' else 'danger' if execution.status == 'failed' else 'warning' if execution.status == 'running' else 'secondary' }}">
+                                            {% if execution.status == 'passed' %}
+                                                <i class="fas fa-check me-1"></i>Passed
+                                            {% elif execution.status == 'failed' %}
+                                                <i class="fas fa-times me-1"></i>Failed
+                                            {% elif execution.status == 'running' %}
+                                                <i class="fas fa-spinner fa-spin me-1"></i>Running
+                                            {% else %}
+                                                <i class="fas fa-clock me-1"></i>{{ execution.status.title() }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if execution.duration %}
+                                            {{ "%.1f"|format(execution.duration) }}s
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ execution.started_at.strftime('%m/%d %H:%M') if execution.started_at else '-' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if not execution.is_suite and execution.script_id and execution.project_id %}
+                                            <a href="{{ url_for('projects.edit_script', id=execution.project_id, script_id=execution.script_id) }}" 
+                                               class="btn btn-sm btn-outline-info" title="Edit Script">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted"><i class="fas fa-eye-slash"></i></span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No test executions yet</h5>
+                        <p class="text-muted">Start by creating a project and recording your first test.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('recording.index') }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-video me-2"></i>
+                                    Record New Test
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-folder me-2"></i>
+                                    Manage Projects
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-outline-info btn-lg">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    View Analytics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrations Section -->
+</div>
+
+{% if error %}
+<div class="container mt-3">
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

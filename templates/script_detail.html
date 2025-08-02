@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Script Details</h2>
+  {% if script %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h4 class="card-title">{{ script.name }}</h4>
+        <p class="card-text">{{ script.description }}</p>
+        <p><strong>Project:</strong> {{ script.project.name if script.project else "N/A" }}</p>
+        <p><strong>Tags:</strong> {{ script.tags if script.tags else "" }}</p>
+        <p><strong>Created By:</strong> {{ script.created_by.username if script.created_by else "N/A" }}</p>
+        <p><strong>Status:</strong> {{ script.conversion_status if script.conversion_status else "N/A" }}</p>
+        {% if script.conversion_error %}
+          <p class="text-danger"><strong>Error:</strong> {{ script.conversion_error }}</p>
+        {% endif %}
+        {% if script.playwright_script_path %}
+          <p><strong>Playwright Script:</strong> {{ script.playwright_script_path }}</p>
+        {% endif %}
+        {% if script.robot_script_path %}
+          <p><strong>Robot Script:</strong> {{ script.robot_script_path }}</p>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning">Script not found.</div>
+  {% endif %}
+  <a href="{{ url_for('projects.detail', id=script.project.id) }}" class="btn btn-secondary">Back to Projects</a>
+</div>
+{% endblock %}

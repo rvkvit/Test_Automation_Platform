@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Change Role for {{ user.username }}</h2>
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="mb-3">
+            <label for="role_id" class="form-label">Select Role</label>
+            <select class="form-select" id="role_id" name="role_id" required>
+                {% for role in roles %}
+                <option value="{{ role.id }}" {% if user.role and user.role.id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Role</button>
+        <a href="{{ url_for('team.dashboard') }}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

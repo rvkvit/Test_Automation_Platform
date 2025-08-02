@@ -1,0 +1,66 @@
+[
+  {
+    "data-testid": null,
+    "id": "",
+    "class": "",
+    "role": null,
+    "name": null,
+    "text": ""
+  },
+  {
+    "data-testid": null,
+    "id": "",
+    "class": "primary hydrated",
+    "role": null,
+    "name": null,
+    "text": "Save"
+  },
+  {
+    "data-testid": null,
+    "id": "",
+    "class": "portal-link",
+    "role": null,
+    "name": null,
+    "text": "OP"
+  },
+  {
+    "data-testid": null,
+    "id": "login_button",
+    "class": "opux-btn opux-btn-primary",
+    "role": null,
+    "name": null,
+    "text": "Tunnistaudu"
+  },
+  {
+    "data-testid": null,
+    "id": "stepup-login",
+    "class": "opux-btn opux-btn-finish",
+    "role": null,
+    "name": null,
+    "text": "Vahvista"
+  },
+  {
+    "data-testid": null,
+    "id": "ssn",
+    "class": "textInput",
+    "role": null,
+    "name": null,
+    "text": ""
+  },
+  {
+    "data-testid": null,
+    "id": "",
+    "class": "panel panel-default",
+    "role": null,
+    "name": null,
+    "text": "Anna seuraavat tiedot.\n    \n    \n        Salasanan antamisen kent\u00e4t eiv\u00e4t t\u00e4sm\u00e4\u00e4. Kirjoita sama salasana molempiin kenttiin ja yrit\u00e4 uudelleen.\n        Pakollinen kentt\u00e4 puuttuu. T\u00e4yt\u00e4 kaikki pakolliset kent\u00e4t ja yrit\u00e4 uudelleen.\n        Sosiaaliturvatunnuskentt\u00e4 on t\u00e4ytetty v\u00e4\u00e4rin. Tarkista sy\u00f6tt\u00e4m\u00e4si tiedot ja yrit\u00e4 uudelleen\n        \n        \n            \n                SosiaaliturvatunnusMik\u00e4 t\u00e4m\u00e4 on?\n            \n        \n        \n            jatkaa"
+  },
+  {
+    "data-testid": null,
+    "id": "ssn",
+    "class": "textInput",
+    "role": null,
+    "name": null,
+    "text": ""
+  }
+]

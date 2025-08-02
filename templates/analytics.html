@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Analytics Dashboard
+                </h1>
+                <div class="d-flex gap-2">
+                    <!-- Project Filter -->
+                    <select class="form-select" id="projectFilter" onchange="filterByProject()">
+                        <option value="">All Projects</option>
+                        {% for project in accessible_projects %}
+                        <option value="{{ project.id }}" 
+                                {% if current_project_id == project.id %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Time Range Filter -->
+                    <select class="form-select" id="timeFilter" onchange="filterByTime()">
+                        <option value="7" {% if current_days == 7 %}selected{% endif %}>Last 7 days</option>
+                        <option value="30" {% if current_days == 30 %}selected{% endif %}>Last 30 days</option>
+                        <option value="90" {% if current_days == 90 %}selected{% endif %}>Last 90 days</option>
+                        <option value="365" {% if current_days == 365 %}selected{% endif %}>Last year</option>
+                    </select>
+                    
+                    <!-- Export Button -->
+                    <button class="btn btn-outline-primary" onclick="exportData()">
+                        <i class="fas fa-download me-1"></i>Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if analytics_data %}
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ analytics_data.total_executions }}</h3>
+                    <p class="mb-0">Total Executions</p>
+                    <small class="opacity-75">Last {{ current_days }} days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    {% set total_passed = analytics_data.trends|sum(attribute='passed') %}
+                    <h3 class="mb-1">{{ total_passed }}</h3>
+                    <p class="mb-0">Passed Tests</p>
+                    <small class="opacity-75">Success Rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    {% set total_failed = analytics_data.trends|sum(attribute='failed') %}
+                    <h3 class="mb-1">{{ total_failed }}</h3>
+                    <p class="mb-0">Failed Tests</p>
+                    <small class="opacity-75">Need Attention</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    {% set avg_pass_rate = analytics_data.trends|selectattr('total', 'greaterthan', 0)|map(attribute='pass_rate')|list %}
+                    {% set overall_pass_rate = (avg_pass_rate|sum / avg_pass_rate|length)|round(1) if avg_pass_rate else 0 %}
+                    <h3 class="mb-1">{{ overall_pass_rate }}%</h3>
+                    <p class="mb-0">Average Pass Rate</p>
+                    <small class="opacity-75">Overall Health</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Trend Chart -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Pass/Fail Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pass Rate Pie Chart -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Overall Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="pieChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Duration Trends -->
+    {% if 'duration_trends' in analytics_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Execution Duration Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="durationChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Project-specific sections -->
+    {% if current_project %}
+    <!-- Flakiness Analysis -->
+    {% if 'flakiness' in analytics_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Flakiness Analysis
+                    </h5>
+                    <span class="badge bg-warning">
+                        {{ analytics_data.flakiness.flaky_count }} flaky scripts
+                    </span>
+                </div>
+                <div class="card-body">
+                    {% if analytics_data.flakiness.scripts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Script</th>
+                                    <th>Total Runs</th>
+                                    <th>Pass Rate</th>
+                                    <th>Flakiness Index</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for script in analytics_data.flakiness.scripts[:10] %}
+                                <tr>
+                                    <td>{{ script.script_name }}</td>
+                                    <td>{{ script.total_runs }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar bg-{{ 'success' if script.pass_rate > 80 else 'warning' if script.pass_rate > 50 else 'danger' }}" 
+                                                 style="width: {{ script.pass_rate }}%">
+                                                {{ script.pass_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar bg-warning" 
+                                                 style="width: {{ (script.flakiness_index * 100)|round }}%">
+                                                {{ (script.flakiness_index * 100)|round }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if script.is_flaky %}
+                                        <span class="badge bg-warning">Flaky</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Stable</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p class="text-muted">No flaky tests detected. Great job!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Script Performance -->
+    {% if 'script_performance' in analytics_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Script Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics_data.script_performance %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Script Name</th>
+                                    <th>Executions</th>
+                                    <th>Avg Duration</th>
+                                    <th>Pass Rate</th>
+                                    <th>Stability Score</th>
+                                    <th>Last Run</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for script in analytics_data.script_performance %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-code me-1"></i>
+                                        {{ script.script_name }}
+                                    </td>
+                                    <td>{{ script.execution_count }}</td>
+                                    <td>{{ script.avg_duration }}s</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            <div class="progress-bar bg-{{ 'success' if script.pass_rate > 80 else 'warning' if script.pass_rate > 50 else 'danger' }}" 
+                                                 style="width: {{ script.pass_rate }}%">
+                                                {{ script.pass_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="height: 20px; width: 80px;">
+                                                <div class="progress-bar bg-{{ 'success' if script.stability_score > 80 else 'warning' if script.stability_score > 50 else 'danger' }}" 
+                                                     style="width: {{ script.stability_score }}%">
+                                                </div>
+                                            </div>
+                                            <span class="text-muted">{{ script.stability_score }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if script.last_run %}
+                                        <small class="text-muted">
+                                            {{ script.last_run[:10] }}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No script performance data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    <!-- Global Project Breakdown -->
+    {% if not current_project and 'project_breakdown' in analytics_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder me-2"></i>
+                        Project Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Executions</th>
+                                    <th>Avg Duration</th>
+                                    <th>Pass Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in analytics_data.project_breakdown %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-folder me-1"></i>
+                                        {{ project.project_name }}
+                                    </td>
+                                    <td>{{ project.execution_count }}</td>
+                                    <td>{{ project.avg_duration }}s</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            <div class="progress-bar bg-{{ 'success' if project.pass_rate > 80 else 'warning' if project.pass_rate > 50 else 'danger' }}" 
+                                                 style="width: {{ project.pass_rate }}%">
+                                                {{ project.pass_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('analytics.project_analytics', project_id=project.project_id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-chart-line me-1"></i>View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- No Data State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No Analytics Data Available</h3>
+                <p class="text-muted mb-4">
+                    Start running tests to see analytics and insights here.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('recording.index') }}" class="btn btn-primary">
+                        <i class="fas fa-video me-1"></i>Record First Test
+                    </a>
+                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>Create Project
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script>
+// Initialize analytics with data
+const analyticsData = {{ analytics_data|tojson if analytics_data else '{}' }};
+const currentProjectId = {{ current_project_id or 'null' }};
+const currentDays = {{ current_days }};
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (analyticsData && analyticsData.trends) {
+        initializeAnalytics(analyticsData, currentProjectId, currentDays);
+    }
+});
+
+function filterByProject() {
+    const projectId = document.getElementById('projectFilter').value;
+    const days = document.getElementById('timeFilter').value;
+    
+    const url = new URL(window.location);
+    if (projectId) {
+        url.searchParams.set('project_id', projectId);
+    } else {
+        url.searchParams.delete('project_id');
+    }
+    url.searchParams.set('days', days);
+    
+    window.location.href = url.toString();
+}
+
+function filterByTime() {
+    const projectId = document.getElementById('projectFilter').value;
+    const days = document.getElementById('timeFilter').value;
+    
+    const url = new URL(window.location);
+    if (projectId) {
+        url.searchParams.set('project_id', projectId);
+    }
+    url.searchParams.set('days', days);
+    
+    window.location.href = url.toString();
+}
+
+function exportData() {
+    const projectId = document.getElementById('projectFilter').value;
+    const days = document.getElementById('timeFilter').value;
+    
+    const url = new URL('{{ url_for("analytics.export_csv") }}', window.location.origin);
+    if (projectId) {
+        url.searchParams.set('project_id', projectId);
+    }
+    url.searchParams.set('days', days);
+    
+    window.open(url.toString(), '_blank');
+}
+</script>
+{% endblock %}

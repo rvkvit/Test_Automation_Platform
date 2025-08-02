@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Project Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="fas fa-folder me-2"></i>
+                        {{ project.name }}
+                    </h1>
+                    {% if project.description %}
+                    <p class="text-muted mb-2">{{ project.description }}</p>
+                    {% endif %}
+                    {% if project.base_url %}
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-link me-1"></i>
+                        <a href="{{ project.base_url }}" target="_blank" class="text-decoration-none">
+                            {{ project.base_url }}
+                        </a>
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('recording.index') }}?project_id={{ project.id }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-video me-1"></i>Record Test
+                    </a>
+                    {% if can_edit %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('projects.edit_project', id=project.id) }}">
+                                    <i class="fas fa-edit me-2"></i>Edit Project
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('team.project_members', project_id=project.id) }}">
+                                    <i class="fas fa-users me-2"></i>Manage Team
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button class="dropdown-item text-danger" onclick="confirmDelete()">
+                                    <i class="fas fa-trash me-2"></i>Delete Project
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Project Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ scripts_with_stats|length }}</h3>
+                    <p class="mb-0">Total Scripts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ scripts_with_stats|selectattr('script.conversion_status', 'equalto', 'completed')|list|length }}</h3>
+                    <p class="mb-0">Ready to Run</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ members|length + 1 }}</h3>
+                    <p class="mb-0">Team Members</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">
+                        {% set total_executions = scripts_with_stats|sum(attribute='total_executions') %}
+                        {{ total_executions }}
+                    </h3>
+                    <p class="mb-0">Total Runs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test Scripts -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-code me-2"></i>
+                        Test Scripts
+                    </h5>
+                    <div class="d-flex gap-2">
+                        {% if can_edit %}
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
+                                data-bs-target="#uploadModal">
+                            <i class="fas fa-upload me-1"></i>Upload Script
+                        </button>
+                        {% endif %}
+                        {% if scripts_with_stats|selectattr('script.conversion_status', 'equalto', 'completed')|list %}
+                        <button class="btn btn-sm btn-success" onclick="runAllScripts()">
+                            <i class="fas fa-play me-1"></i>Run All
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if scripts_with_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" onchange="toggleAllScripts()">
+                                    </th>
+                                    <th>Script Name</th>
+                                    <th>Status</th>
+                                    <th>Last Run</th>
+                                    <th>Pass Rate</th>
+                                    <th>Total Runs</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in scripts_with_stats %}
+                                {% set script = item.script %}
+                                <tr>
+                                    <td>
+                                        {% if script.conversion_status == 'completed' %}
+                                        <input type="checkbox" class="script-checkbox" 
+                                               value="{{ script.id }}">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-code me-2 text-muted"></i>
+                                            <div>
+                                                <a href="{{ url_for('projects.script_detail', id=project.id, script_id=script.id) }}" 
+                                                   class="fw-bold text-decoration-none">
+                                                    {{ script.name }}
+                                                </a>
+                                                {% if script.description %}
+                                                <br><small class="text-muted">{{ script.description[:50] }}{% if script.description|length > 50 %}...{% endif %}</small>
+                                                {% endif %}
+                                                {% if script.tags %}
+                                                <br>
+                                                {% for tag in script.get_tags_list() %}
+                                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                                                {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if script.conversion_status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Ready
+                                        </span>
+                                        {% elif script.conversion_status == 'processing' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Converting
+                                        </span>
+                                        {% elif script.conversion_status == 'failed' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Failed
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.last_execution %}
+                                        <div>
+                                            <span class="badge bg-{{ 'success' if item.last_execution.status.value == 'passed' else 'danger' if item.last_execution.status.value == 'failed' else 'warning' }}">
+                                                {{ item.last_execution.status.value.title() }}
+                                            </span>
+                                            <br><small class="text-muted">
+                                                {{ item.last_execution.started_at.strftime('%m/%d %H:%M') }}
+                                            </small>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.total_executions > 0 %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: {{ item.pass_rate }}%">
+                                                {{ item.pass_rate }}%
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.total_executions }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if script.conversion_status == 'completed' %}
+                                            <form id="run-script-form-{{ script.id }}" method="POST" action="/execute/script/{{ script.id }}" style="display:none;">
+                                                {{ delete_form.hidden_tag() }}
+                                                <input type="hidden" name="headless" value="false">
+                                            </form>
+                                            <button class="btn btn-outline-success" type="button" onclick="runScriptAndRedirect(event, {{ script.id }})">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+{% block scripts %}
+<script>
+function runScriptAndRedirect(event, scriptId) {
+    event.preventDefault();
+    const form = document.getElementById('run-script-form-' + scriptId);
+    // Always fetch a fresh CSRF token before running the test
+    fetch('/projects/get_csrf_token')
+        .then(response => response.json())
+        .then(data => {
+            // Update the CSRF token in the form
+            const csrfInput = form.querySelector('input[name="csrf_token"]');
+            if (csrfInput) {
+                csrfInput.value = data.csrf_token;
+            } else {
+                // If not present, add it
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'csrf_token';
+                input.value = data.csrf_token;
+                form.appendChild(input);
+            }
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/execute/results';
+                } else {
+                    alert(data.error || 'Failed to start execution.');
+                }
+            })
+            .catch(() => {
+                alert('Failed to start execution.');
+            });
+        })
+        .catch(() => {
+            alert('Failed to fetch CSRF token. Please refresh the page.');
+        });
+}
+</script>
+{% endblock %}
+                                            {% endif %}
+                                            <a href="{{ url_for('projects.script_detail', id=project.id, script_id=script.id) }}" class="btn btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('projects.edit_script', id=project.id, script_id=script.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('projects.delete_script', id=project.id, script_id=script.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this test script?');">
+                                                {{ delete_form.hidden_tag() }}
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete Test Script">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Bulk Actions -->
+                    {% if scripts_with_stats|selectattr('script.conversion_status', 'equalto', 'completed')|list %}
+                    <div class="mt-3">
+                        <button class="btn btn-success" onclick="runSelectedScripts()" disabled id="runSelectedBtn">
+                            <i class="fas fa-play me-1"></i>Run Selected
+                        </button>
+                        <span class="text-muted ms-3" id="selectedCount">0 scripts selected</span>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-code fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Test Scripts Yet</h5>
+                        <p class="text-muted mb-4">
+                            Start by recording your first test or uploading an existing Robot Framework script.
+                        </p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{{ url_for('recording.index') }}?project_id={{ project.id }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-video me-1"></i>Record First Test
+                            </a>
+                            {% if can_edit %}
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" 
+                                    data-bs-target="#uploadModal">
+                                <i class="fas fa-upload me-1"></i>Upload Script
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+{% if can_edit %}
+<div class="modal fade" id="uploadModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('projects.upload_script', id=project.id) }}" enctype="multipart/form-data">
+                {{ upload_form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Robot Framework Script</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="robot_file" class="form-label">Robot Framework File (.robot)</label>
+                        <input type="file" class="form-control" id="robot_file" name="robot_file" 
+                               accept=".robot" required>
+                        <div class="form-text">
+                            Upload a .robot file to add to this project
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('projects.delete_project', id=project.id) }}">
+                {{ delete_project_form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Delete Project
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the project <strong>"{{ project.name }}"</strong>?</p>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This action cannot be undone. All test scripts, execution results, and project data will be permanently deleted.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+let csrfToken = '{{ csrf_token() }}';
+
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function toggleAllScripts() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.script-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.script-checkbox:checked');
+    const count = selected.length;
+    const button = document.getElementById('runSelectedBtn');
+    const counter = document.getElementById('selectedCount');
+    
+    button.disabled = count === 0;
+    counter.textContent = `${count} script${count !== 1 ? 's' : ''} selected`;
+}
+
+// Add event listeners to checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.script-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+});
+
+function runScript(scriptId) {
+    if (!confirm('Run this test script?')) return;
+    
+    const form = new FormData();
+    form.append('csrf_token', csrfToken);
+    form.append('headless', 'true');
+    
+    fetch(`/execute/script/${scriptId}`, {
+        method: 'POST',
+        body: form
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            if (data.redirect_url) {
+                setTimeout(() => window.location.href = data.redirect_url, 1500);
+            }
+        } else {
+            showAlert('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Failed to start execution');
+    });
+}
+
+function runSelectedScripts() {
+    const selected = Array.from(document.querySelectorAll('.script-checkbox:checked'))
+                          .map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        showAlert('warning', 'Please select at least one script to run');
+        return;
+    }
+    
+    if (!confirm(`Run ${selected.length} selected script${selected.length !== 1 ? 's' : ''}?`)) return;
+    
+    const form = new FormData();
+    form.append('csrf_token', csrfToken);
+    form.append('headless', 'true');
+    selected.forEach(id => form.append('script_ids[]', id));
+    
+    fetch(`/execute/project/{{ project.id }}`, {
+        method: 'POST',
+        body: form
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            if (data.redirect_url) {
+                setTimeout(() => window.location.href = data.redirect_url, 1500);
+            }
+        } else {
+            showAlert('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Failed to start execution');
+    });
+}
+
+function runAllScripts() {
+    // Select all ready scripts
+    document.querySelectorAll('.script-checkbox:not(:checked)').forEach(cb => cb.checked = true);
+    updateSelectedCount();
+    runSelectedScripts();
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertAdjacentElement('afterbegin', alertDiv);
+    
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// Auto-refresh CSRF token every 10 minutes (600,000 ms)
+setInterval(function() {
+    fetch('/projects/get_csrf_token')
+        .then(response => response.json())
+        .then(data => {
+            if (data.csrf_token) {
+                document.querySelectorAll('form[action*="delete_script"] input[name="csrf_token"]').forEach(function(input) {
+                    input.value = data.csrf_token;
+                });
+            }
+        });
+}, 600000); // 10 minutes
+</script>
+{% endblock %}

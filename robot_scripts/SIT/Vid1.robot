@@ -1,0 +1,51 @@
+*** Settings ***
+Library    Browser
+
+*** Variables ***
+${BASE_URL}    https://sit1asiointi.lahitapiola.fi/
+${BROWSER_TYPE}    firefox
+
+*** Test Cases ***
+Navigate and Perform Actions
+    [Tags]    smoke
+    Open Browser Context
+    Accept Cookies
+    Perform Initial Actions
+    Navigate to Default Page
+    Perform Language and Insurance Actions
+    Close Browser Context
+
+*** Keywords ***
+Open Browser Context
+    New Browser    ${BROWSER_TYPE}
+    New Context    recordVideo={'dir': './execution_videos/SIT'}
+    New Page
+    Go To    ${BASE_URL}
+
+Accept Cookies
+    Click    role=button[name="Save"]
+    Click    role=button[name="Hyväksy kaikki"]
+
+Perform Initial Actions
+    Click    role=link[name="OP"]
+    Click    role=button[name="Tunnistaudu"]
+    Click    role=button[name="Vahvista"]
+    Click    role=textbox[name="Sosiaaliturvatunnus"]
+    Fill Text    role=textbox[name="Sosiaaliturvatunnus"]    010183-800N
+    Click    role=button[name="jatkaa"]
+
+Navigate to Default Page
+    Go To    ${BASE_URL}default/#/
+    Click    role=button[name="Hyväksy kaikki"]
+
+Perform Language and Insurance Actions
+    Click    test-id=language role=button[name="FI"]
+    Click    role=button[name="På svenska"]
+    Click    role=button[name="Försäkringar"]
+    Click    role=link[name="Köpa ny försäkring"]
+    Click    role=link[name="Fordonsförsäkring"]
+    Click    css=#credit-check-icon svg
+    Click    role=button[name="Ok"]
+
+Close Browser Context
+    Close Context
